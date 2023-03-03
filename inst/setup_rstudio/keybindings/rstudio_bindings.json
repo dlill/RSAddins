@@ -1,0 +1,17 @@
+{
+    "addCursorAbove" : "Shift+Alt+Up",
+    "addCursorBelow" : "Shift+Alt+Down",
+    "executeCurrentSection" : "Ctrl+Shift+T",
+    "expandToMatching" : "",
+    "insertSection" : "",
+    "newTerminal" : "",
+    "openSourceDoc" : "",
+    "pasteLastYank" : "",
+    "quitSession" : "",
+    "roxygenizePackage" : "",
+    "showShellDialog" : "Ctrl+Shift+A",
+    "sourceActiveDocument" : "",
+    "showDiagnosticsProject" : "",
+    "splitline" : ""
+}
+

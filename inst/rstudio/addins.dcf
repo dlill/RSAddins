@@ -1,0 +1,136 @@
+Name: Toggle sections
+Description: Toggles sections in the document outline
+Binding: toggle_section
+Interactive: false
+
+Name: Toggle subsections
+Description: Toggles sections in the document outline
+Binding: toggle_subsection
+Interactive: false
+
+Name: Toggle subsubsections
+Description: Toggles sections in the document outline
+Binding: toggle_subsubsection
+Interactive: false
+
+Name: Transform subsection
+Description: Turn subsection into subsubsection
+Binding: transform_subsection
+Interactive: false
+
+Name: Initialize or delete subsection
+Description: init or delet
+Binding: initiate_or_delete_subsection
+Interactive: false
+
+Name: Renumber sections
+Description: renumber the subsections
+Binding: renumber_sections
+Interactive: false
+
+Name: Insert loopdebugger
+Description: Insert loopdebugger
+Binding: insert_loopdebugger
+Interactive: false
+
+Name: Insert debugonce
+Description: Insert debugonce
+Binding: insert_debugonce
+Interactive: false
+
+Name: Insert formals
+Description: Insert formals of a function call
+Binding: insertFormals
+Interactive: false
+
+Name: Assign formals
+Description: Assign formals to globalEnv
+Binding: assignFormals
+Interactive: false
+
+Name: Fix commas
+Description: Fix commas in a list
+Binding: fixCommas
+Interactive: false
+
+Name: Toggle mclappply
+Description: Toggle mclapple/lapply on or off
+Binding: toggle_mclapply
+Interactive: false
+
+Name: Align Assign
+Description: Aligns '<-' or '=' assignment operators within a highlighted area.
+Binding: alignAssign
+Interactive: false
+
+Name: Align Cursors
+Description: Aligns all cursors. Use Ctrl/Cmd + Alt + click to insert multiple cursors.
+Binding: alignCursor
+Interactive: false
+
+Name: Align Assign Arrow
+Description: Aligns '<-' assignment operators within a highlighted area.
+Binding: alignAssignArrow
+Interactive: false
+
+Name: Align Assign Equal
+Description: Aligns assignment '=' operators within a highlighted area.
+Binding: alignAssignEqual
+Interactive: false
+
+Name: Toggle Blabla
+Description: Toggles blabla
+Binding: toggle_blabla
+Interactive: false
+
+
+Name: extractImportFrom
+Description: Toggles sections in the document outline
+Binding: extract_importFrom
+Interactive: false
+
+
+Name: exposeAsArgument
+Description: Extracts a variable as a function argument
+Binding: exposeAsArgument
+Interactive: false
+
+
+Name: refactor_functionCall
+Description: refactors a funciton call
+Binding: refactor_functionCall
+Interactive: false
+
+
+
+Name: insertHistory
+Description: inserts part of history
+Binding: insertHistory
+Interactive: false
+
+
+
+Name: insertDput
+Description: inserts the current row or selected text as evaluated and dputted code
+Binding: insertDput
+Interactive: false
+
+Name: toggle_roxyComments
+Description: switches between # and #' style comments
+Binding: toggle_roxyComments
+Interactive: false
+
+
+
+
+Name: duplicateArguments
+Description: duplicates arguments
+Binding: duplicateArguments
+Interactive: false
+
+Name: swapArg1Arg2
+Description: Swap two arguments in a two-valued function
+Binding: swapArg1Arg2
+Interactive: false
+
+

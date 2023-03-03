@@ -1,0 +1,16 @@
+Package: RSAddins
+Type: Package
+Title: Rstudio addins
+Version: 1.0.0
+Author: Daniel Lill
+Maintainer: Daniel Lill <daniel.lill@intiquan.com>
+Description: Collection of RStudio addins
+License: GPL (>= 2)
+Encoding: UTF-8
+LazyData: true
+Depends:
+  data.table
+Imports:
+  stringr
+RoxygenNote: 7.2.3
+Suggests: testthat

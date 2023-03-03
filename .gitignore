@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+Port_Models/
+*.so
+.here
+*.c
+*.o
+wup/
