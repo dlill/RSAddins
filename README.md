@@ -3,6 +3,48 @@
 This collection is a collection of semi-heuristic addins for RStudio.
 Their quality depends on when they were written.
 
+# Shortcuts
+
+**Install** keyboard shortcuts with
+
+```
+RSAddins::installRSkeybindings()
+```
+
+**Print** keyboard shortcuts with
+
+```
+RSAddins::printRSShortcuts()
+```
+
+|Function                      |Shortcut         |
+|:-----------------------------|:----------------|
+|alignAssign                   |Ctrl+Q           |
+|alignCursor                   |Ctrl+Shift+Q     |
+|toggle_subsection             |Ctrl+Y           |
+|toggle_subsubsection          |Ctrl+Shift+Y     |
+|insertFormals                 |Ctrl+Shift+Alt+I |
+|assignFormals                 |Ctrl+Shift+Alt+O |
+|fixCommas                     |Ctrl+Alt+Z       |
+|exposeAsArgument              |Ctrl+Alt+C       |
+|toggle_mclapply               |Ctrl+Shift+G     |
+|insert_debugonce              |Ctrl+Shift+Alt+G |
+|transform_subsection          |Ctrl+J           |
+|initiate_or_delete_subsection |Ctrl+Shift+J     |
+|renumber_sections             |Ctrl+Shift+R     |
+|insert_loopdebugger           |Ctrl+Shift+I     |
+|toggle_blabla                 |Ctrl+Alt+O       |
+|extract_importFrom            |Ctrl+Alt+I       |
+|refactor_functionCall         |Ctrl+Alt+U       |
+|insertHistory                 |Ctrl+Alt+H       |
+|insertDput                    |Ctrl+Shift+Alt+H |
+|clipr::clipr_result           |Ctrl+Shift+Alt+E |
+|toggle_roxyComments           |Ctrl+Shift+Alt+C |
+|swapArg1Arg2                  |Ctrl+Shift+Alt+D |
+|duplicateArguments            |Ctrl+O           |
+|------------------------------|-----------------|
+
+
 ## 01-toggle-sections
 ![](doc/gifs/01-toggle-sections.gif)
 ## 02-toggle-subsections
