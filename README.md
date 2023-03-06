@@ -42,8 +42,9 @@ RSAddins::printRSShortcuts()
 |toggle_roxyComments           |Ctrl+Shift+Alt+C |
 |swapArg1Arg2                  |Ctrl+Shift+Alt+D |
 |duplicateArguments            |Ctrl+O           |
-|------------------------------|-----------------|
 
+
+# Examples
 
 ## 01-toggle-sections
 ![](doc/gifs/01-toggle-sections.gif)
