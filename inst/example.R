@@ -54,11 +54,12 @@ function_with_bug(arg1, arg2, arg3)
 
 a <- NULL
 b <- 1
-x <- "x"
+x <- c("option1", "option2")
 y <- NULL
 fun <- function(a, b = 1, x = c("option1", "option2"), y = NULL) {
   # do stuff
 }
+
 
 # 5 Assign formals ----
 

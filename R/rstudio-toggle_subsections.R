@@ -361,7 +361,7 @@ getFormalValues <- function(functionText) {
                         textWithoutBody,
                         "{",
                         "  fx <- formals()",
-                        "  l <- lapply(setNames(nm = names(fx)), function(x) tryCatch(eval(parse(text = x)), error = function(e) NULL))",
+                        "  l <- lapply(setNames(nm = names(fx)), function(xx_______) tryCatch(eval(parse(text = xx_______)), error = function(e) NULL))",
                         "}",
                         ".formalFun()")
   formalValues <- eval(parse(text = formalValuesText))
