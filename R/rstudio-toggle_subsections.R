@@ -630,11 +630,11 @@ toggle_blabla <- function() {
   rstudioapi::documentSave(id = e$id)
   text <- readLines(e$path)
   
-  if (!any(grepl("BLABLA", text))){
-    text <- gsub("[,", "[BLABLA,", text, fixed = TRUE)
-    text <- gsub(",]", ",BLABLA]", text, fixed = TRUE)
+  if (!any(grepl("\"BLABLA\"", text))){
+    text <- gsub("[,", "[\"BLABLA\",", text, fixed = TRUE)
+    text <- gsub(",]", ",\"BLABLA\"]", text, fixed = TRUE)
   } else {
-    text <- gsub("BLABLA", "", text, fixed = TRUE)
+    text <- gsub("\"BLABLA\"", "", text, fixed = TRUE)
   }
   
   text <- paste0(text, collapse = "\n")
@@ -680,7 +680,6 @@ extract_importFrom <- function() {
   # Add other stuff as well (hacky but can be cleaned in a breeze, just remove this row)
   text <- paste0("#' @md\n", 
                  "#' @family \n", 
-                 "#' @family", 
                  text)
   
   # Insert into beginning of selection (preferably select up to @export)
