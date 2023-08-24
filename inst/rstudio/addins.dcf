@@ -122,7 +122,6 @@ Interactive: false
 
 
 
-
 Name: duplicateArguments
 Description: duplicates arguments
 Binding: duplicateArguments
@@ -131,6 +130,32 @@ Interactive: false
 Name: swapArg1Arg2
 Description: Swap two arguments in a two-valued function
 Binding: swapArg1Arg2
+Interactive: false
+
+
+Name: turnIntoFactor
+Description: Turn something into a factor
+Binding: turnIntoFactor
+Interactive: false
+
+
+
+Name: dtify
+Description: Add data.table:: where appropriate
+Binding: dtify
+Interactive: false
+
+
+Name: projectPathComment_fromSection
+Description: Add projectPath and projectComment
+Binding: projectPathComment_fromSection
+Interactive: false
+
+
+
+Name: projectPathComment_allSections
+Description: Update projectPath and projectComment in all model sections
+Binding: projectPathComment_allSections
 Interactive: false
 
 

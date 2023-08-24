@@ -26,4 +26,6 @@ functionText <- c("fun1<- function(",
           "if (a ==2) {",
           "b}",
           "}")
+functionText <- c("fun <- function(a, b = 1, x = c(\"option1\", \"option2\"), y = NULL) {", 
+"  # do stuff", "}")
 }

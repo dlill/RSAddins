@@ -155,7 +155,9 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
       line <- ds3[i,s]
       nsec <- ds3[i,number]
       reg <- regexpr("# .... \\d* ?", text[line])
-      rstudioapi::modifyRange(c(line, reg, line, reg + attr(reg, "match.length")), paste0("# .... ", nsec, " "))
+      rstudioapi::modifyRange(location = c(line, reg, line, reg + attr(reg, "match.length")), 
+                              text = paste0("# .... ", nsec, " "), 
+                              id = e$id)
     }
   }
   # .. 3  # Associate subs to s -----
@@ -167,7 +169,9 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
       line <- ds2[i,s]
       nsec <- ds2[i,number]
       reg <- regexpr("# .. \\d* ?", text[line])
-      rstudioapi::modifyRange(c(line, reg, line, reg + attr(reg, "match.length")), paste0("# .. ", nsec, " "))
+      rstudioapi::modifyRange(location = c(line, reg, line, reg + attr(reg, "match.length")),
+                              text = paste0("# .. ", nsec, " "),
+                              id = e$id)
     }
   }
   
@@ -178,8 +182,10 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
     for (i in 1:nrow(ds1)) {
       line <- ds1[i,s]
       nsec <- ds1[i,number]
-      reg <- regexpr("# \\d* ?", text[line])
-      rstudioapi::modifyRange(c(line, reg, line, reg + attr(reg, "match.length")), paste0("# ", nsec, " "))
+      reg <- regexpr("# (?!# )\\d* ?", text[line], perl = TRUE)
+      rstudioapi::modifyRange(location = c(line, reg, line, reg + attr(reg, "match.length")), 
+                              text = paste0("# ", nsec, " "),
+                              id = e$id)
     }
   }
   rstudioapi::documentSave(id = e$id)
@@ -346,6 +352,8 @@ exposeAsArgument <- function() {
 #'           "if (a ==2) {",
 #'           "b}",
 #'           "}")
+#' functionText <- c("fun <- function(a, b = 1, x = c(\"option1\", \"option2\"), y = NULL) {", 
+#' "  # do stuff", "}")
 getFormalValues <- function(functionText) {
   
   bodyIdx <- grep("{", functionText, fixed = TRUE)[1]
@@ -761,6 +769,7 @@ duplicateArguments <- function() {
 
 
 
+
 #' Swap the first two arguments of a function call
 #' e.g setdiff(x,y) becomes setdiff(y,x)
 #' @param text 
@@ -793,6 +802,7 @@ swapArg1Arg2InText <- function(text) {
 #'
 #' @examples
 #' # Uncomment and try
+#' # setdiff(1:5, unique(c(1,2,6,7)))
 swapArg1Arg2 <- function() {
   
   e <- rstudioapi::getSourceEditorContext()
@@ -992,9 +1002,318 @@ toggle_roxyComments <- function() {
   rstudioapi::setSelectionRanges(list(e$selection[[1]]$range), id = e$id)
 }
 
+# -------------------------------------------------------------------------#
+# Turn into factor ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+turnIntoFactor <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  current_row <- e$selection[[1]]$range$start[1]
+  text <- readLines(e$path)
+  textline <- text[current_row]
+  
+  start <- e$selection[[1]]$range$start[2]
+  end <- e$selection[[1]]$range$end[2]
+  
+  word <- guess_word(textline, start, end)
+  factorCall <- paste0(word, " = factor(",word, ", unique(",word,"))")
+  newLine <- gsub(word, factorCall, textline)
+  
+  # If the call happens within a data.table, print a line which outputs the dput into the clipboard for manual editing
+  if (grepl("\\w+\\[,`:=`\\(\\w+\\)\\]", textline)) {
+    newLine2 <- textline
+    newLine2 <- gsub("`:=`\\(","", newLine2)
+    newLine2 <- gsub(word, paste0("clipr::write_clip(capture.output(dput(unique(",word,")))"), newLine2)
+    newLine <- paste0(newLine2,"\n", newLine)
+  }
+  
+  rstudioapi::modifyRange(location = rstudioapi::document_range(start = rstudioapi::document_position(current_row, 1),
+                                                                end = rstudioapi::document_position(current_row, Inf)),
+                          text = newLine,
+                          id = e$id)
+  rstudioapi::documentSave(id = e$id)
+  sink <- NULL
+}
 
 
+#' Title
+#'
+#' @param textline 
+#' @param start 
+#' @param end 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+guess_word <- function(textline, start, end) {
+  
+  textlineSpaces <- gsub("\\W", " ", textline)
+  textlineSpacesSplit <- strsplit(textlineSpaces, "")[[1]]
+  
+  # Construct a vector of word Ids
+  wordStartStop = c(0,diff(textlineSpacesSplit != " "))
+  # Capture edge cases - starting with a word. Stopping with a word happens *after* the vector, so this does not need to be captured
+  if (min(which(wordStartStop == -1)) < min(which(wordStartStop == 1))) wordStartStop[1] <- 1
+  wordActive = cumsum(wordStartStop)
+  wordIds <- wordActive
+  counter = 0
+  for (i in seq_along(wordStartStop)) {
+    counter <- counter + (wordStartStop[i] == 1)
+    wordIds[i] <- wordActive[i] * counter
+  }
+  
+  # Initiate search start
+  wordIdStart <- wordIds[start]
+  wordIdEnd <- wordIds[end]
+  
+  if (wordIdStart != 0 & wordIdEnd != 0 & wordIdStart != wordIdEnd) {
+    message("Please select a single word only")
+    return(NA)
+  }
+  
+  # Heuristic to find word
+  wordId <- wordIdStart
+  if (wordId == 0) wordId <- wordIdEnd
+  if (wordId == 0 & start != 1) wordId <- wordIds[start - 1]
+  # if (wordId == 0 & end != length(wordIds)) wordId <- wordIds[end + 1]
+  if (wordId == 0) {
+    message("Word could not be found. Please place your cursor on a word")
+    return(NA)
+  }
+  
+  # Construct word
+  word <- paste0(textlineSpacesSplit[wordIds == wordId], collapse = "")
+  word
+  
+}
 
+
+# -------------------------------------------------------------------------#
+# Dtify script ----
+# -------------------------------------------------------------------------#
+
+#' replace bare function calls to data.table functions by data.table::funCall
+#' 
+#' Works on whole script
+#' 
+#' @return
+#' @export
+#'
+#' @examples
+dtify <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  
+  dtFunctions <- c("as.data.table", "copy", "data.table", "dcast", "fread", 
+                   "fwrite", "melt", "nafill", "rbindlist",
+                   "setcolorder", "setindex", "setindexv", "setkey", 
+                   "setkeyv", "setnafill", "setnames", "setorder", "setorderv", 
+                   "setreordervec", "transpose")
+  idxNoComment <- grep("^ *#", text, invert = TRUE)
+  regex <- paste0(
+    "(?<!data\\.table::)", # Ensure no leading data.table
+    "(",
+    paste0(dtFunctions, collapse = "|"),
+    ")",
+    "(?=\\()", # Ensure function call
+    ""
+  )
+  text <- gsub(regex, "data.table::\\1", text, perl = TRUE)
+  text <- paste0(text, collapse = "\n")
+  
+  rstudioapi::setDocumentContents(text = text, id = e$id)
+  rstudioapi::documentSave(id = e$id)
+  
+  sink <- NULL
+}
+
+
+# -------------------------------------------------------------------------#
+# projectPath projectComment from section header ----
+# -------------------------------------------------------------------------#
+
+#' Add projectPath and projectComment automatically
+#' 
+#' Transform 
+#' # -------------------------------------------------------------------------#
+#' # 1 estimate CL ----
+#' # -------------------------------------------------------------------------#
+#' 
+#' to 
+#' # -------------------------------------------------------------------------#
+#' # 1 estimate CL ----
+#' # -------------------------------------------------------------------------#
+#' projectPath <- file.path(.modelFolder, "MODEL01") 
+#' projectComment <- "estimate CL"
+#' 
+#' @return
+#' @export
+#'
+#' @examples
+projectPathComment_fromSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  rowCursor <- e$selection[[1]]$range$start[1]
+  documentText <- readLines(e$path)
+  rowSection <- grep("^# \\d+ .* ----$", documentText)
+  rowSection <- max(rowSection[rowSection <= rowCursor])
+  sectionText <- documentText[rowSection]
+  
+  rowProjectPath <- rowSection + 2
+  rowProjectComment <- rowSection + 3
+  
+  projectNumber <- as.numeric(gsub("# (\\d+) .*","\\1", sectionText))
+  projectPathText <- sprintf("projectPath <- file.path(.modelFolder, \"MODEL_%02d\")", projectNumber)
+  
+  projectComment <- gsub("# \\d+ (.*) ----","\\1", sectionText)
+  projectCommentText <- sprintf("projectComment <- \"%s\"", projectComment)
+  
+  # Insert or modify the text, depending on whether it is present
+  if (grepl("projectPath <- ", documentText[rowProjectPath])) {
+    rstudioapi::modifyRange(location = rstudioapi::document_range(
+      start = rstudioapi::document_position(rowProjectPath, 1),
+      end = rstudioapi::document_position(rowProjectPath, Inf)),
+      text = projectPathText, e$id)
+    
+  } else {
+    rstudioapi::insertText(location = rstudioapi::document_position(rowProjectPath, 1), text = 
+                             paste0(projectPathText, "\n"),id =  e$id)
+  }
+  
+  if (grepl("projectComment <- ", documentText[rowProjectComment])) {
+    rstudioapi::modifyRange(location = rstudioapi::document_range(
+      start = rstudioapi::document_position(rowProjectComment, 1),
+      end = rstudioapi::document_position(rowProjectComment, Inf)),
+      text = projectCommentText, e$id)
+  } else {
+    rstudioapi::insertText(location = rstudioapi::document_position(rowProjectComment, 1), text = 
+                             paste0(projectCommentText, "\n"),id =  e$id)
+  }
+  
+  rstudioapi::documentSave(id = e$id)
+}
+
+
+#' Add projectPath and projectComment automatically
+#' 
+#' Transform 
+#' # -------------------------------------------------------------------------#
+#' # 1 estimate CL ----
+#' # -------------------------------------------------------------------------#
+#' 
+#' to 
+#' # -------------------------------------------------------------------------#
+#' # 1 estimate CL ----
+#' # -------------------------------------------------------------------------#
+#' projectPath <- file.path(.modelFolder, "MODEL01") 
+#' projectComment <- "estimate CL"
+#' 
+#' @return
+#' @export
+#'
+#' @examples
+projectPathComment_allSections <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  message("Model sections are identified by their first line containing 'projectPath'")
+  
+  documentText <- readLines(e$path)
+  sectionStartRows <- grep("^# \\d+ .* ----$", documentText)
+  isModelSection <- sapply(sectionStartRows, function(x) {grepl("projectPath", documentText[x+2])})
+  sectionStartRows <- sectionStartRows[isModelSection]
+  
+  for (rowSection in sectionStartRows){
+    sectionText <- documentText[rowSection]
+    
+    rowProjectPath <- rowSection + 2
+    rowProjectComment <- rowSection + 3
+    
+    projectNumber <- as.numeric(gsub("# (\\d+) .*","\\1", sectionText))
+    projectPathText <- sprintf("projectPath <- file.path(.modelFolder, \"MODEL_%02d\")", projectNumber)
+    
+    projectComment <- gsub("# \\d+ (.*) ----","\\1", sectionText)
+    projectCommentText <- sprintf("projectComment <- \"%s\"", projectComment)
+    
+    # Modify the text in the two rows below section header
+    rstudioapi::modifyRange(location = rstudioapi::document_range(
+      start = rstudioapi::document_position(rowProjectPath, 1),
+      end = rstudioapi::document_position(rowProjectPath, Inf)),
+      text = projectPathText, e$id)
+    
+    rstudioapi::modifyRange(location = rstudioapi::document_range(
+      start = rstudioapi::document_position(rowProjectComment, 1),
+      end = rstudioapi::document_position(rowProjectComment, Inf)),
+      text = projectCommentText, e$id)
+    
+    rstudioapi::documentSave(id = e$id)
+  }
+}
+
+
+# [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
+# 
+# [ ] Sequential shortcuts. ctrl+k ctrl+k
+# [ ] Sequential shortcuts. ctrl+k ctrl+u
+# [ ] Sequential shortcuts, ctrl+k ctrl+v verbose script
+# 
+# [ ] evinceLastPlot. Extract last pdf file name from history to flplot and call evince
+#     re-use lines from history() for this.
+# 
+# [ ] toggle betwee Multiline, single line
+#   list(a,
+#        b, 
+#        c)
+#   list(a, b, c)
+# 
+# [ ] quote the arguments
+#   list(a, b, c)
+#   list("a", "b", "c")
+# 
+# [ ] Remove a magrittr pipeline
+#   a %>% fun
+#   fun(a)
+#
+# [ ] safer exposeAsArgument which writes to the correct function
+#
+# [ ] Toggle between for and lapply
+#   for (x in y) {do stuff}
+#   lapply(y, function(x) {do stuff})
+# 
+# [ ] Toggle verbose script on or off
+#   Line # .. bla ----- ###
+#   gets the following line directly below it:
+#   cat(".. bla ------", "\n")
+#   Can also apply to (interactive) tags, etc
+# 
+##
+# text <- 'result <- fun(arg1 = argval1, arg2, c(arg3.1, arg.32))'
+# parsedText <- parse(text = text)
+# length(parsedText[[1]])
+# length(parsedText[[1]][[3]])
+# 
+# One problem: Formals vanish
+# text <- 'result <- fun(arg1 = argval1, arg2, c(arg3.1, arg.32))'
+# parsedText <- parse(text = text)
+# deparse(parsedText[[1]]) # OK
+# deparse(parsedText[[1]][[3]]) # OK
+# deparse(parsedText[[1]][[3]][[2]]) # FAIL
+# as.list(parsedText[[1]][[3]]) # Maybe this is a way
+# Read more tricks here https://stat.ethz.ch/R-manual/R-devel/doc/manual/R-lang.html#Language-objects
+# 
+# 
+# 
+# [ ] >>>> // Continue here <<<<<<<<<<< ----
 
 
 

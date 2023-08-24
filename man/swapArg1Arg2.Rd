@@ -14,4 +14,5 @@ e.g setdiff(x,y) becomes setdiff(y,x)
 }
 \examples{
 # Uncomment and try
+# setdiff(1:5, unique(c(1,2,6,7)))
 }
