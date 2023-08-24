@@ -159,3 +159,9 @@ Binding: projectPathComment_allSections
 Interactive: false
 
 
+Name: collapseMultilineCode
+Description: Collapse multiline code
+Binding: collapseMultilineCode
+Interactive: false
+
+

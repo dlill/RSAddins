@@ -26,6 +26,7 @@
     "RSAddins::dtify" : "Ctrl+Shift+K Ctrl+D",
     "RSAddins::projectPathComment_fromSection" : "Ctrl+Shift+K Ctrl+P",
     "RSAddins::projectPathComment_allSections" : "Ctrl+Shift+K Ctrl+Shift+P",
+    "RSAddins::collapseMultilineCode" : "Ctrl+Shift+K Ctrl+Shift+M",
     "RSsnippets::asSnippet" : "Ctrl+Shift+Alt+S"
     
 }

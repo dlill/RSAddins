@@ -870,6 +870,7 @@ insertDput <- function() {
 #'
 #' @param documentText 
 #' @param row 
+#' @param FLAGreturnIdxs return indices instead of text 
 #'
 #' @return
 #' @export
@@ -886,16 +887,19 @@ insertDput <- function() {
 #' row <- 6
 #' findConnectedCode(documentText, row)
 #' for (i in 1:6) print(findConnectedCode(documentText, i))
-findConnectedCode <- function(documentText, row) {
+findConnectedCode <- function(documentText, row, FLAGreturnIdxs = FALSE) {
   for (rowUp in rev(seq_len(row))) {
     for (rowDown in seq(rowUp, length(documentText))) {
       isParsed <- suppressMessages(suppressWarnings(
-        try(parse(text = paste0(documentText[rowUp:rowDown], collapse = "\n")), silent = TRUE)))
+        try(parse(text = paste0(documentText[rowUp:max(row,rowDown)], collapse = "\n")), silent = TRUE)))
       if (!inherits(isParsed, "try-error")) break
     }
     if (!inherits(isParsed, "try-error")) break
   }
-  text <- documentText[rowUp:rowDown]
+  
+  if (FLAGreturnIdxs) return(rowUp:max(row,rowDown))
+  
+  text <- documentText[rowUp:max(row,rowDown)]
   text
 }
 
@@ -955,6 +959,140 @@ findFunctionCode <- function(documentText, row) {
   
   text
 }
+
+
+# -------------------------------------------------------------------------#
+# Compress Multiline ----
+# -------------------------------------------------------------------------#
+
+
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+collapseMultilineCode <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  text <- e$selection[[1]]$text
+  text <- strsplit(text, "\n")[[1]]
+  text <- collapseMultilineCodeWorkhorse(text)
+  
+  text <- paste0(c(
+    "",
+    "# --- Collapsed multiline code. ---- ",
+    "# For snippets, wrap the expression into `r {expr}` by using the surrounding lines.",
+    "Also, for snippets, the last expression must not be assigned, but evaluate to a single-length character",
+    "",
+    "`r {",
+    text,
+    "}`",
+    "",
+    "# --- End collapsed multiline code. ---- ",
+    ""
+  ), collapse = "\n")
+  
+  location <- rstudioapi::document_position(row = e$selection[[1]]$range$end[1] + 1, column = 1)
+  rstudioapi::insertText(location = location, text = text, id = e$id)
+}
+
+#' Compress multiline code into single-line code
+#'
+#' @param codeToCompress Code given as character string. The code must be without error!
+#'
+#' @return Character(1L) with the code being compressed
+#' @export
+#'
+#' @examples
+#' codeToCompress <- c(
+#'   "f <- function(x) {",
+#'   "  paste0(x, c('bla',",
+#'   "  'bla'),",
+#'   "  'bla'",
+#'   "  )",
+#'   "}",
+#'   "f('asdf')"
+#' )
+#' collapseMultilineCodeWorkhorse(codeToCompress)
+collapseMultilineCodeWorkhorse <- function(codeToCompress) {
+  
+  # Check if code can be parsed
+  isParsed <- suppressMessages(suppressWarnings(
+    try(parse(text = codeToCompress), silent = TRUE)))
+  if (inherits(isParsed, "try-error")) {stop("Code could not be parsed")}
+  
+  # Check that it as no comments!
+  if (any(grepl("#", codeToCompress))) {stop("Code cannot have comments anywhere.")}
+  
+  
+  # Crunch ...
+  while (length(codeToCompress) > 1 & !all(grepl(";$", codeToCompress))) {
+    
+    connectedLines <- lapply(seq_along(codeToCompress), function(i) {
+      findConnectedCode(codeToCompress, i)
+    })
+    
+    connectedLineIdxs <- lapply(seq_along(codeToCompress), function(i) {
+      findConnectedCode(codeToCompress, i, FLAGreturnIdxs = TRUE)
+    })
+    
+    
+    # Single lines which can be parsed on their own
+    oneLinerCandidates <- which(sapply(connectedLines, function(x) length(x) == 1))
+    
+    isTrueOneLiner <- sapply(oneLinerCandidates, function(x) {
+      testCode <- codeToCompress
+      testCode[x] <- paste0(testCode[x],";")
+      isParsed <- suppressMessages(suppressWarnings(
+        try(parse(text = testCode), silent = TRUE)))
+      success <- !inherits(isParsed, "try-error")
+      success
+    })
+    falseOneLiners <- oneLinerCandidates[!isTrueOneLiner] # Part of multiline list which cannot have semicolon in the end
+    trueOneLiners <- oneLinerCandidates[isTrueOneLiner] # Tre oneliner which is not part of multiline list
+    
+    # Deal with trueOneLiners: Append semicolons if not present
+    for (idx in trueOneLiners) {
+      if (!grepl(";$", codeToCompress[idx])) codeToCompress[idx] <- paste0(codeToCompress[idx], ";")
+    }
+    
+    # Find subsets and supersets of remaining connected lines
+    # True oneliners were dealt with (they can be crunched now, because they have their semicolon), false oneliners are not of interest
+    uniqueConnectedLineIdxs <- unique(connectedLineIdxs[-oneLinerCandidates])
+    
+    if (length(uniqueConnectedLineIdxs) == 0) break
+    
+    subsetMatrix <- sapply(seq_along(uniqueConnectedLineIdxs), function(i) {
+      sapply(seq_along(uniqueConnectedLineIdxs), function(j) {
+        all(uniqueConnectedLineIdxs[[i]] %in% uniqueConnectedLineIdxs[[j]])
+      })
+    })
+    subsetMatrix <- t(subsetMatrix) # i,j == TRUE means: j is a subset of i
+    diag(subsetMatrix) <- FALSE # Remove the trivial relations
+    
+    isNoSuperset <- which(!apply(subsetMatrix, 2, any))
+    
+    # The ones which are no superset can be shrunk without semicolon
+    i <- (isNoSuperset)[[1]]
+    for (i in isNoSuperset) {
+      idx <- connectedLineIdxs[[i]]
+      compressedCode <- paste0(codeToCompress[idx], collapse = " ")
+      codeToCompress <- codeToCompress[-idx]
+      codeToCompress <- append(codeToCompress, compressedCode, after = min(idx) - 1)
+    }
+    
+  }
+  
+  # Finally, paste all guys together, as they all have semicolons now
+  compressedCode <- paste0(codeToCompress, collapse = " ")
+  
+  compressedCode <- gsub(" +", " ", compressedCode)
+  compressedCode
+  
+}
+
 
 
 
@@ -1259,6 +1397,9 @@ projectPathComment_allSections <- function() {
     rstudioapi::documentSave(id = e$id)
   }
 }
+
+
+
 
 
 # [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----

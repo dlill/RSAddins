@@ -4,12 +4,14 @@
 \alias{findConnectedCode}
 \title{Find rows which, taken together, are parseable code}
 \usage{
-findConnectedCode(documentText, row)
+findConnectedCode(documentText, row, FLAGreturnIdxs = FALSE)
 }
 \arguments{
 \item{documentText}{}
 
 \item{row}{}
+
+\item{FLAGreturnIdxs}{return indices instead of text}
 }
 \value{
 
