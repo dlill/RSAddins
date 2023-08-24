@@ -984,7 +984,7 @@ collapseMultilineCode <- function() {
     "",
     "# --- Collapsed multiline code. ---- ",
     "# For snippets, wrap the expression into `r {expr}` by using the surrounding lines.",
-    "Also, for snippets, the last expression must not be assigned, but evaluate to a single-length character",
+    "# Also, for snippets, the last expression must not be assigned, but evaluate to a single-length character",
     "",
     "`r {",
     text,
