@@ -986,6 +986,7 @@ collapseMultilineCode <- function() {
     "# For snippets, wrap the expression into `r {expr}` by using the surrounding lines.",
     "# Also, for snippets, the last expression must not be assigned, but evaluate to a single-length character",
     "# It is recommended to keep multiline versions of the snippets' raw code as well.",
+    "# Note: The collapsed code has all comments removed.",
     "",
     "`r {",
     text,
@@ -1024,12 +1025,19 @@ collapseMultilineCodeWorkhorse <- function(codeToCompress) {
     try(parse(text = codeToCompress), silent = TRUE)))
   if (inherits(isParsed, "try-error")) {stop("Code could not be parsed")}
   
-  # Check that it as no comments!
-  if (any(grepl("#", codeToCompress))) {stop("Code cannot have comments anywhere.")}
-  
+  # Remove hashes
+  if (any(grepl("#", codeToCompress))) {
+    warning("Selected text contains hashes (#). Trying to remove comments by parsing and outputting, but it is not guaranteed to always work.")
+    codeToCompress <- as.character(parse(text = codeToCompress))
+    codeToCompress <- strsplit(codeToCompress, "\n")
+    codeToCompress <- do.call(c, codeToCompress)
+  }
   
   # Crunch ...
+  counter <- 0
   while (length(codeToCompress) > 1 & !all(grepl(";$", codeToCompress))) {
+    counter <- counter+1
+    if (counter >= 100) break
     
     connectedLines <- lapply(seq_along(codeToCompress), function(i) {
       findConnectedCode(codeToCompress, i)
@@ -1062,6 +1070,8 @@ collapseMultilineCodeWorkhorse <- function(codeToCompress) {
     # Find subsets and supersets of remaining connected lines
     # True oneliners were dealt with (they can be crunched now, because they have their semicolon), false oneliners are not of interest
     uniqueConnectedLineIdxs <- unique(connectedLineIdxs[-oneLinerCandidates])
+    # Where in the list of connectedLineIdxs are the uniqueConnecteLineIdxs located? index of index vectors ...
+    uniqueConnectedLineIdxsLocations <- setdiff(which(!duplicated(connectedLineIdxs)), oneLinerCandidates)
     
     if (length(uniqueConnectedLineIdxs) == 0) break
     
@@ -1074,10 +1084,11 @@ collapseMultilineCodeWorkhorse <- function(codeToCompress) {
     diag(subsetMatrix) <- FALSE # Remove the trivial relations
     
     isNoSuperset <- which(!apply(subsetMatrix, 2, any))
+    isNoSuperset <- uniqueConnectedLineIdxsLocations[isNoSuperset] # Go back from the unique list to the full list of connectedLines
     
     # The ones which are no superset can be shrunk without semicolon
     i <- (isNoSuperset)[[1]]
-    for (i in isNoSuperset) {
+    for (i in rev(sort(isNoSuperset))) { # Classic case of where you need to traverse the array backwards
       idx <- connectedLineIdxs[[i]]
       compressedCode <- paste0(codeToCompress[idx], collapse = " ")
       codeToCompress <- codeToCompress[-idx]
