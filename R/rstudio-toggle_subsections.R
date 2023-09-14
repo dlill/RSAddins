@@ -834,7 +834,7 @@ swapArg1Arg2 <- function() {
 #' @examples
 #' # Uncomment and try out
 #' 1+1
-#' a <- c(
+#' a <- list(
 #'   a= 1:3,
 #'   b = list("a", "b", "c"),
 #'   d = list("a", "b", "c")
@@ -860,7 +860,7 @@ insertDput <- function() {
     rstudioapi::setCursorPosition(position = rstudioapi::document_position(rowEnd + 1, 1), id = e$id)
     outputMdTable(x, NFLAGtribble = 2)
   } else {
-    codeToInsert <- paste0(variable, " <- ", paste0(capture.output(dput(x)), collapse = "\n"), "\n")
+    codeToInsert <- paste0(variable, " <- ", paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   }
   rstudioapi::documentSave(id = e$id)
@@ -988,12 +988,11 @@ collapseMultilineCode <- function() {
     "#  2. the last expression must not be assigned, but evaluate to a single-length character",
     "#  3. It is recommended to keep multiline versions of the snippets' raw code as well.",
     "#  4. Dollars are currently escaped - either rectify manually in the snippets file or don't use them.",
-    "#  5. ` marks the end of the R code - so avoid constructs like `:=`",
+    "#  5. ` marks the end of the R code - so avoid constructs like `:=`.",
+    "#  5.1 a:=b will be converted to `:=` by the parser, so avoid as well. use mutate instead",
     "# Note: The collapsed code has all comments removed.",
     "",
-    "`r {",
-    text,
-    "}`",
+    paste0("`r {",text,"}`"),
     "",
     "# --- End collapsed multiline code. ---- ",
     ""
@@ -1183,7 +1182,7 @@ turnIntoFactor <- function() {
   if (grepl("\\w+\\[,`:=`\\(\\w+\\)\\]", textline)) {
     newLine2 <- textline
     newLine2 <- gsub("`:=`\\(","", newLine2)
-    newLine2 <- gsub(word, paste0("clipr::write_clip(capture.output(dput(unique(",word,")))"), newLine2)
+    newLine2 <- gsub(word, paste0("clipr::write_clip(deparse(unique(",word,",20))"), newLine2)
     newLine <- paste0(newLine2,"\n", newLine)
   }
   
