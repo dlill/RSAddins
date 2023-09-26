@@ -1,5 +1,5 @@
 # -------------------------------------------------------------------------#
-# Subsection ----
+# 0 Subsection ----
 # -------------------------------------------------------------------------#
 
 #' @rdname toggle
@@ -194,7 +194,7 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
 
 
 # -------------------------------------------------------------------------#
-# Loopdebugger ----
+# 1 Loopdebugger ----
 # -------------------------------------------------------------------------#
 
 #' @rdname extract_loopargs
@@ -263,7 +263,7 @@ insert_loopdebugger <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Function arguments ----
+# 2 Function arguments ----
 # -------------------------------------------------------------------------#
 
 #' Fix commas in rearranged lists
@@ -443,7 +443,7 @@ insertFormals <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Toggle mclapply/lapply ----
+# 3 Toggle mclapply/lapply ----
 # -------------------------------------------------------------------------#
 
 #' Title
@@ -532,7 +532,7 @@ toggle_mclapply <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Debugonce ----
+# 4 Debugonce ----
 # -------------------------------------------------------------------------#
 
 #' Guess function name of interest
@@ -580,7 +580,7 @@ insert_debugonce <- function() {
 }
 
 # -------------------------------------------------------------------------#
-# History ----
+# 5 History ----
 # -------------------------------------------------------------------------#
 
 
@@ -612,7 +612,7 @@ insertHistory <- function() {
 
 
 # -------------------------------------------------------------------------#
-# BLABLA ----
+# 6 BLABLA ----
 # -------------------------------------------------------------------------#
 
 #' Toggle BLABLA so the documentwalker can extract functions
@@ -654,7 +654,7 @@ toggle_blabla <- function() {
 
 
 # -------------------------------------------------------------------------#
-# importFrom ----
+# 7 importFrom ----
 # -------------------------------------------------------------------------#
 
 #' Go through code and extract all package::function calls into roxy tags
@@ -702,7 +702,7 @@ extract_importFrom <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Function call ----
+# 8 Function call ----
 # -------------------------------------------------------------------------#
 
 #' Title
@@ -821,7 +821,7 @@ swapArg1Arg2 <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Insert dput ----
+# 9 Insert dput ----
 # -------------------------------------------------------------------------#
 
 #' Execute selected text and insert its result as source code into your script
@@ -962,7 +962,7 @@ findFunctionCode <- function(documentText, row) {
 
 
 # -------------------------------------------------------------------------#
-# Compress Multiline ----
+# 10 Compress Multiline ----
 # -------------------------------------------------------------------------#
 
 
@@ -1111,7 +1111,7 @@ collapseMultilineCodeWorkhorse <- function(codeToCompress) {
 
 
 # -------------------------------------------------------------------------#
-# Toggle roxy comments ----
+# 11 Toggle roxy comments ----
 # -------------------------------------------------------------------------#
 
 
@@ -1155,7 +1155,7 @@ toggle_roxyComments <- function() {
 }
 
 # -------------------------------------------------------------------------#
-# Turn into factor ----
+# 12 Turn into factor ----
 # -------------------------------------------------------------------------#
 
 #' Title
@@ -1249,7 +1249,7 @@ guess_word <- function(textline, start, end) {
 
 
 # -------------------------------------------------------------------------#
-# Dtify script ----
+# 13 Dtify script ----
 # -------------------------------------------------------------------------#
 
 #' replace bare function calls to data.table functions by data.table::funCall
@@ -1290,19 +1290,19 @@ dtify <- function() {
 
 
 # -------------------------------------------------------------------------#
-# projectPath projectComment from section header ----
+# 14 projectPath projectComment from section header ----
 # -------------------------------------------------------------------------#
 
 #' Add projectPath and projectComment automatically
 #' 
 #' Transform 
 #' # -------------------------------------------------------------------------#
-#' # 1 estimate CL ----
+#' # 15 estimate CL ----
 #' # -------------------------------------------------------------------------#
 #' 
 #' to 
 #' # -------------------------------------------------------------------------#
-#' # 1 estimate CL ----
+#' # 16 estimate CL ----
 #' # -------------------------------------------------------------------------#
 #' projectPath <- file.path(.modelFolder, "MODEL01") 
 #' projectComment <- "estimate CL"
@@ -1360,12 +1360,12 @@ projectPathComment_fromSection <- function() {
 #' 
 #' Transform 
 #' # -------------------------------------------------------------------------#
-#' # 1 estimate CL ----
+#' # 17 estimate CL ----
 #' # -------------------------------------------------------------------------#
 #' 
 #' to 
 #' # -------------------------------------------------------------------------#
-#' # 1 estimate CL ----
+#' # 18 estimate CL ----
 #' # -------------------------------------------------------------------------#
 #' projectPath <- file.path(.modelFolder, "MODEL01") 
 #' projectComment <- "estimate CL"
@@ -1413,10 +1413,109 @@ projectPathComment_allSections <- function() {
 }
 
 
+# -------------------------------------------------------------------------#
+# 19 flplot from section header ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @param text 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+parseSectionTable <- function(text) {
+  # Get all sections
+  s1 <- grep(" -{4}$", text, perl = TRUE)
+  s2 <- grep(" -{5}$", text)
+  s3 <- grep(" -{6}$", text)
+  
+  ds1 <- if (length(s1)) data.table::data.table(line = s1, level = 1) else NULL
+  ds2 <- if (length(s2)) data.table::data.table(line = s2, level = 2) else NULL
+  ds3 <- if (length(s3)) data.table::data.table(line = s3, level = 3) else NULL
+  ds <- data.table::rbindlist(list(ds1,ds2,ds3), use.names = TRUE)
+  ds <- ds[order(line)]
+  ds[,`:=`(s1 = 0)]
+  ds[level == 1,`:=`(s1 = 1)]
+  ds[,`:=`(s1 = cumsum(s1) - 1)] # sections start at 0, for historical reasons
+  ds[,`:=`(s2 = 0)]
+  ds[level == 2,`:=`(s2 = 1)]
+  ds[,`:=`(s2 = cumsum(s2)), by = c("s1")]
+  ds[,`:=`(s3 = 0)]
+  ds[level == 3,`:=`(s3 = 1)]
+  ds[,`:=`(s3 = cumsum(s3)), by = c("s1", "s2")]
+  
+  data.table::copy(ds) # update print behaviour
+}
+
+#' Title
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+flplotFromSectionHeader_allSections <- function() {
+  # Update this, so it is in sync
+  RSAddins::renumber_sections()
+  
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  
+  ds <- parseSectionTable(text)
+  
+  # Construct flplot name
+  # regexplanation: 
+  # Take care of indent
+  # There can be multiple #'s due to commenting of full section
+  # Take care of dots for subsections and subsubsections
+  # Stip dashes at the end of the sections
+  ds[,`:=`(flplot = trimws(gsub("^ *(# *)+\\.* *\\d+| *-*$", "", text[line])))]
+  ds[,`:=`(flplot = gsub(" ", "_", flplot))]
+  ds[,`:=`(flplot = sprintf(paste0("%0", max(s1) %/% 10, "d",
+                                   "%0", max(s2) %/% 10, "d",
+                                   "%0", max(s3) %/% 10, "d",
+                                   "_%s.pdf"),s1,s2,s3,flplot))]
+  
+  ds[,`:=`(lineFlplotOffset = ifelse(level == 1, 2, 1))]
+  
+  # Identify subsections with flplot
+  ds[,`:=`(lineNext = c(line[-1],length(text)))]
+  ds[,`:=`(lineFlplot = {
+    isCommentedOut <- all(grepl("^ *#", text[line:lineNext]))
+    linesFlplot <- grep(" *flplot *<- *", text[line:lineNext])
+    # Ignore sections if they are fully commented-out
+    if (isCommentedOut || length(linesFlplot) > 1) {
+      if (length(linesFlplot) > 1) {
+        message("Spotted multiple plot files in one (sub/subsub)-section. This section will be unchanged.")
+      }
+      NA
+    } else {
+      line + linesFlplot - 1
+    }
+  }), by = "line"]
+  ds <- ds[!is.na(lineFlplot)]
+  
+  # Move flplot assignment to top of section and insert new filename
+  i <- (rev(seq_len(nrow(ds))))[[1]]
+  for (i in rev(seq_len(nrow(ds)))) {
+    line_rm <- ds[i,lineFlplot]
+    line_append_after <- ds[i,line + lineFlplotOffset - 1]
+    text_append <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", flplot, "\")")]
+    text <- text[-line_rm]
+    text <- append(text, text_append, after = line_append_after)
+  }
+  rstudioapi::setDocumentContents(paste0(c(text, "\n"), collapse = "\n"), e$id)
+  
+  # Return nothing
+  invisible()  
+}
 
 
-
-# [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
+# 20 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
 # 
 # [ ] Sequential shortcuts. ctrl+k ctrl+k
 # [ ] Sequential shortcuts. ctrl+k ctrl+u
@@ -1425,7 +1524,7 @@ projectPathComment_allSections <- function() {
 # [ ] evinceLastPlot. Extract last pdf file name from history to flplot and call evince
 #     re-use lines from history() for this.
 # 
-# [ ] toggle betwee Multiline, single line
+# [x] toggle betwee Multiline, single line
 #   list(a,
 #        b, 
 #        c)
@@ -1435,7 +1534,7 @@ projectPathComment_allSections <- function() {
 #   list(a, b, c)
 #   list("a", "b", "c")
 # 
-# [ ] Remove a magrittr pipeline
+# [-] Remove a magrittr pipeline
 #   a %>% fun
 #   fun(a)
 #
@@ -1468,7 +1567,7 @@ projectPathComment_allSections <- function() {
 # 
 # 
 # 
-# [ ] >>>> // Continue here <<<<<<<<<<< ----
+# 21 [ ] >>>> // Continue here <<<<<<<<<<< ----
 
 
 

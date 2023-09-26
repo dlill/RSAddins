@@ -165,3 +165,9 @@ Binding: collapseMultilineCode
 Interactive: false
 
 
+Name: flplotFromSectionHeader_allSections
+Description: Rename flplot from section header in all sections
+Binding: flplotFromSectionHeader_allSections
+Interactive: false
+
+

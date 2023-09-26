@@ -33,7 +33,8 @@ installRSkeybindings <- function(FLAGoverwrite = FALSE){
     keybindings_files <- list.files(system.file("setup_rstudio/keybindings", package = "RSAddins"), "json$", F, T)
     wup <- vapply(stats::setNames(nm = keybindings_files), file.copy, to = keybindings_path, overwrite = FLAGoverwrite, FUN.VALUE = TRUE)
   }
+  if (!any(wup)) cat("No keybindings were installed. Do you need to set FLAGoverwrite to TRUE?")
   if (any(wup)) cat(paste0(names(wup)[wup], collapse = " .... \n"),  "\nkeybindings installed\n")
-  NULL
+  invisible()
 }
 

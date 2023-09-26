@@ -27,6 +27,7 @@
     "RSAddins::projectPathComment_fromSection" : "Ctrl+Shift+K Ctrl+P",
     "RSAddins::projectPathComment_allSections" : "Ctrl+Shift+K Ctrl+Shift+P",
     "RSAddins::collapseMultilineCode" : "Ctrl+Shift+K Ctrl+Shift+M",
+    "RSAddins::flplotFromSectionHeader_allSections" : "Ctrl+Shift+K Ctrl+Shift+L",
     "RSsnippets::asSnippet" : "Ctrl+Shift+Alt+S"
     
 }

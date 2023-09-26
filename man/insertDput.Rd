@@ -15,7 +15,7 @@ data.frames are inserted as tibble::tribble
 \examples{
 # Uncomment and try out
 1+1
-a <- c(
+a <- list(
   a= 1:3,
   b = list("a", "b", "c"),
   d = list("a", "b", "c")
