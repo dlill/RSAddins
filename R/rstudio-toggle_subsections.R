@@ -1375,6 +1375,9 @@ projectPathComment_fromSection <- function() {
 #'
 #' @examples
 projectPathComment_allSections <- function() {
+  
+  RSAddins::renumber_sections()
+  
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
   
