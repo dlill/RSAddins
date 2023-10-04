@@ -1478,12 +1478,18 @@ flplotFromSectionHeader_allSections <- function() {
   # Stip dashes at the end of the sections
   ds[,`:=`(flplot = trimws(gsub("^ *(# *)+\\.* *\\d+| *-*$", "", text[line])))]
   ds[,`:=`(flplot = gsub(" ", "_", flplot))]
+  # Disallow special characters. Potentially unsafe regex, but ok for this purpose
+  ds[,`:=`(flplot = gsub("[,(){};/\\\\'\"]", "", flplot))]
+  ds[,`:=`(flplot = gsub("\\[|\\]", "", flplot))]
+  # Apply heuristics to shorten filename
+  ds[,`:=`(flplot = gsub("_-_", "-", flplot))] # many redundant spaces
+  ds[,`:=`(flplot = gsub("__", "_", flplot))]  # many redundant spaces
+  ds[,`:=`(flplot = gsub("_([A-Z0-9])", "\\1", flplot))] # Camel case can be shortened
+  # Assemble filename  
   ds[,`:=`(flplot = sprintf(paste0("%0", max(s1) %/% 10, "d",
                                    "%0", max(s2) %/% 10, "d",
                                    "%0", max(s3) %/% 10, "d",
                                    "_%s.pdf"),s1,s2,s3,flplot))]
-  
-  ds[,`:=`(lineFlplotOffset = ifelse(level == 1, 2, 1))]
   
   # Identify subsections with flplot
   ds[,`:=`(lineNext = c(line[-1],length(text)))]
@@ -1491,11 +1497,13 @@ flplotFromSectionHeader_allSections <- function() {
     isCommentedOut <- all(grepl("^ *#", text[line:lineNext]))
     linesFlplot <- grep(" *flplot *<- *", text[line:lineNext])
     # Ignore sections if they are fully commented-out
-    if (isCommentedOut || length(linesFlplot) > 1) {
+    if (length(linesFlplot) == 0) {
+      NA_real_
+    } else if (isCommentedOut || length(linesFlplot) > 1) {
       if (length(linesFlplot) > 1) {
         message("Spotted multiple plot files in one (sub/subsub)-section. This section will be unchanged.")
       }
-      NA
+      NA_real_
     } else {
       line + linesFlplot - 1
     }
@@ -1506,7 +1514,7 @@ flplotFromSectionHeader_allSections <- function() {
   i <- (rev(seq_len(nrow(ds))))[[1]]
   for (i in rev(seq_len(nrow(ds)))) {
     line_rm <- ds[i,lineFlplot]
-    line_append_after <- ds[i,line + lineFlplotOffset - 1]
+    line_append_after <- ds[i,lineFlplot - 1]
     text_append <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", flplot, "\")")]
     text <- text[-line_rm]
     text <- append(text, text_append, after = line_append_after)
