@@ -71,7 +71,7 @@ outputMdTable <- function(dt, split_by = NULL, filename = NULL, format = c("mark
     kt <- substr(kt, 2, nchar(kt))
     kt <- gsub("\\|", " , ", kt)
     rowN <- kt[length(kt)]
-    rowN <- substr(rowN, 1, nchar(rowN)-1)
+    rowN <- substr(rowN, 1, nchar(rowN)-3)
     rowN <- paste0(rowN, "))")
     kt <- kt[-length(kt)]
     kt <- c(row0, row1, kt, rowN, "")
