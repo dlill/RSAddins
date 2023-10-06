@@ -843,6 +843,7 @@ swapArg1Arg2 <- function() {
 insertDput <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range
   
   row <- e$selection[[1]]$range$start[1]
   rowEnd <- e$selection[[1]]$range$end[1]
@@ -863,6 +864,11 @@ insertDput <- function() {
     codeToInsert <- paste0(variable, " <- ", paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   }
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
   rstudioapi::documentSave(id = e$id)
 }
 
@@ -1164,9 +1170,12 @@ toggle_roxyComments <- function() {
 #' @export
 #'
 #' @examples
+#' dwup <- data.table::data.table(blablabla = c("wupwupwupwupwupwupwup", "bla"))
+#' dwup[,`:=`(blablabla)]
 turnIntoFactor <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range # for reindent, but too annoying. if a solution is found, this can be reactivated.
   current_row <- e$selection[[1]]$range$start[1]
   text <- readLines(e$path)
   textline <- text[current_row]
@@ -1178,18 +1187,28 @@ turnIntoFactor <- function() {
   factorCall <- paste0(word, " = factor(",word, ", unique(",word,"))")
   newLine <- gsub(word, factorCall, textline)
   
-  # If the call happens within a data.table, print a line which outputs the dput into the clipboard for manual editing
+  # If the call happens within a data.table, give the second option: evaluated levels as plain text dputted in the script
   if (grepl("\\w+\\[,`:=`\\(\\w+\\)\\]", textline)) {
-    newLine2 <- textline
-    newLine2 <- gsub("`:=`\\(","", newLine2)
-    newLine2 <- gsub(word, paste0("clipr::write_clip(deparse(unique(",word,",20))"), newLine2)
-    newLine <- paste0(newLine2,"\n", newLine)
+    evaledLevels <- textline
+    evaledLevels <- gsub("`:=`\\(","unique(", evaledLevels)
+    evaledLevels <- deparse(eval(parse(text = evaledLevels)), width.cutoff = 20)
+    evaledLevels <- paste0(evaledLevels, collapse = "\n")
+    evaledLevels[1] <- gsub("c(", "c(\n", evaledLevels[1], fixed = TRUE)
+    evaledLevels[length(evaledLevels)] <- gsub(")", "\n)", evaledLevels[length(evaledLevels)], fixed = TRUE)
+    factorCall2 <- paste0(word, " = factor(", word, ", levels = ", evaledLevels, ")")
+    newLine2 <- gsub(word, factorCall2, textline)
+    newLine <- paste0(newLine,"\n", newLine2)
   }
   
   rstudioapi::modifyRange(location = rstudioapi::document_range(start = rstudioapi::document_position(current_row, 1),
                                                                 end = rstudioapi::document_position(current_row, Inf)),
                           text = newLine,
                           id = e$id)
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
   rstudioapi::documentSave(id = e$id)
   sink <- NULL
 }
@@ -1514,12 +1533,10 @@ flplotFromSectionHeader_allSections <- function() {
   i <- (rev(seq_len(nrow(ds))))[[1]]
   for (i in rev(seq_len(nrow(ds)))) {
     line_rm <- ds[i,lineFlplot]
-    line_append_after <- ds[i,lineFlplot - 1]
-    text_append <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", flplot, "\")")]
-    text <- text[-line_rm]
-    text <- append(text, text_append, after = line_append_after)
+    text_replace <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", flplot, "\")")]
+    text[line_rm] <- text_replace
   }
-  rstudioapi::setDocumentContents(paste0(c(text, "\n"), collapse = "\n"), e$id)
+  rstudioapi::setDocumentContents(paste0(c(text, ""), collapse = "\n"), e$id)
   
   # Return nothing
   invisible()  

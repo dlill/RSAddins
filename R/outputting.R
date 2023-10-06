@@ -36,10 +36,12 @@ outputMdTable <- function(dt, split_by = NULL, filename = NULL, format = c("mark
   # kt <- knitr::kable(dt,format = format[1], caption = caption)
   kt <- knitr::kable(dt,format = format[1], caption = caption, ...)
   
-  seprow <- gsub(":","-",kt[2 + 2*(!is.null(caption))])
+  seprow <- gsub(":","-",kt[3 + 2*(!is.null(caption))])
   widths <- nchar(strsplit(seprow, "|", fixed = TRUE)[[1]][-1])
   
   if (NFLAGtribble) {
+    
+    # Add quotes for strings and factos
     types <- vapply(dt, class, "double")
     for (fact in names(types)[types=="factor"]) dt[[fact]] <- as.character(dt[[fact]])
     hasDoubleQuote <- vapply(names(types)[types%in%c("character","factor")], function(nm) any(grepl('"', dt[[nm]])), FUN.VALUE = TRUE)
@@ -48,13 +50,26 @@ outputMdTable <- function(dt, split_by = NULL, filename = NULL, format = c("mark
       warning("This table has double quotes (\") AND single quotes ('). Using (\"), but the output must be checked manually.")
     quoteSymbol <- ifelse(any(hasDoubleQuote), "'", '"')
     for (fact in names(types)[types%in%c("character","factor")]) dt[[fact]] <- paste0(quoteSymbol, dt[[fact]], quoteSymbol)
+    
+    # Handle widths: Account for quotes
+    widths[types%in%c("character","factor")] <- widths[types%in%c("character","factor")] + 2 # increase widths by the quote symbols that were added manually
+    # Handle widths: Account for whitespace padding in the first column which will be removed upon autoindent
+    hasWhiteSpacePaddingRow1Cell1 <- sub("|","", kt[3], fixed = TRUE)
+    hasWhiteSpacePaddingRow1Cell1 <- hasWhiteSpacePaddingRow1Cell1 != trimws(hasWhiteSpacePaddingRow1Cell1)
+    if (hasWhiteSpacePaddingRow1Cell1) {
+      npad <- sub("|","", kt[3], fixed = TRUE)
+      npad <- gsub("( *)\\w.*", "\\1", npad)
+      npad <- nchar(npad)
+      widths[1] <- widths[1] - npad
+    }
+    
     kt <- knitr::kable(dt,format = "markdown")
     kt <- kt[-(1:2)]
     row0 <- "data.table::data.table("
     row0 <- paste0(row0, "tibble::tribble(")
-    row1 <- paste0(stringr::str_pad(paste0("~", names(dt), ","), width = widths, side = "left"), collapse = "")
+    row1 <- paste0(paste0(stringr::str_pad(paste0("~", names(dt)), width = widths, side = "right"), " , "), collapse = "")
     kt <- substr(kt, 2, nchar(kt))
-    kt <- gsub("\\|", ",", kt)
+    kt <- gsub("\\|", " , ", kt)
     rowN <- kt[length(kt)]
     rowN <- substr(rowN, 1, nchar(rowN)-1)
     rowN <- paste0(rowN, "))")
