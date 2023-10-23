@@ -171,3 +171,9 @@ Binding: flplotFromSectionHeader_allSections
 Interactive: false
 
 
+Name: toggleCommentForWholeSection
+Description: Comment or uncomment a whole section
+Binding: toggleCommentForWholeSection
+Interactive: false
+
+

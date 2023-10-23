@@ -12,3 +12,7 @@ turnIntoFactor()
 \description{
 Title
 }
+\examples{
+dwup <- data.table::data.table(blablabla = c("wupwupwupwupwupwupwup", "bla"))
+dwup[,`:=`(blablabla)]
+}

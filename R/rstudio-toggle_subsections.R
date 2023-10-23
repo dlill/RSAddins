@@ -1542,6 +1542,48 @@ flplotFromSectionHeader_allSections <- function() {
   invisible()  
 }
 
+# -------------------------------------------------------------------------#
+# Comment/uncomment section ----
+# -------------------------------------------------------------------------#
+
+#' Comment/uncomment a whole section in one key stroke
+#'
+#' @return
+#' @export
+#' @md
+#' @family 
+#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
+#'
+#' @examples
+toggleCommentForWholeSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  currentRow <- e$selection[[1]]$range$start[1]
+  
+  ds <- parseSectionTable(text)
+  idx <- min(which(currentRow - ds$line <= 0)) - 1
+  rowStart <- ds$line[idx]
+  rowEnd <- ds$line[idx + 1] - 1
+  
+  textRange <- text[seq(rowStart, rowEnd)]
+  if (all(grepl("^# ?",textRange))) {
+    textRange <- gsub("^# ?", "", textRange)
+  } else {
+    textRange <- paste0("# ", textRange)
+  }
+  textRange <- paste0(c(textRange), collapse = "\n")
+  
+  range <- rstudioapi::document_range(
+    start = rstudioapi::document_position(rowStart, 1),
+    end = rstudioapi::document_position(rowEnd, Inf)
+  )
+  
+  rstudioapi::modifyRange(location = range, text = textRange, id = e$id)
+  
+}
+
+
 
 # 20 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
 # 
