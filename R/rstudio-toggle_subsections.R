@@ -193,6 +193,57 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
 }
 
 
+
+#' Same as renumber_sections but with filename, not as addin
+#' 
+#' @export
+#' 
+renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) {
+  text <- readLines(filename)
+  
+  # .. 1 Get lines -----
+  s1all <- s1 <- grep("(?<!Exit) -{4}$", text, perl = TRUE)
+  if (FLAGfunctionAsSection){
+    functions <- grep("function(", text, fixed = TRUE)
+    s1all <- c(s1all, functions)
+  }
+  s2 <- grep(" -{5}$", text)
+  s3 <- grep(" -{6}$", text)
+  
+  # .. 2  # Associate subsubs to subs -----
+  if (length(s3)){
+    ds3 <- data.table::data.table(s = s3)
+    ds3[,`:=`(s2associated = which.min(s > s2) ), by = (1:nrow(ds3))]
+    ds3[,`:=`(number = 1:.N), by = s2associated]
+    for (i in 1:nrow(ds3)) {
+      line <- ds3[i,s]
+      text[line] <- gsub("# .... \\d* ?", paste0("# .... ", nsec, " "), text[line])
+    }
+  }
+  # .. 3  # Associate subs to s -----
+  if (length(s2)){
+    ds2 <- data.table::data.table(s = s2)
+    ds2[,`:=`(s1associated = which.min(s > s1all) ), by = (1:nrow(ds2))]
+    ds2[,`:=`(number = 1:.N), by = s1associated]
+    for (i in 1:nrow(ds2)) {
+      line <- ds2[i,s]
+      text[line] <- gsub("# .. \\d* ?", paste0("# .. ", nsec, " "), text[line])
+    }
+  }
+  
+  # .. 4 Number sections -----
+  if (length(s1)){
+    ds1 <- data.table::data.table(s = s1)
+    ds1[,`:=`(number = 1:.N - 1)]  
+    for (i in 1:nrow(ds1)) {
+      line <- ds1[i,s]
+      text[line] <- gsub("# \\d* ?", paste0("# ", nsec, " "), text[line])
+    }
+  }
+  writeLines(text, filename)
+}
+
+
 # -------------------------------------------------------------------------#
 # 1 Loopdebugger ----
 # -------------------------------------------------------------------------#
