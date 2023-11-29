@@ -217,6 +217,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
     ds3[,`:=`(number = 1:.N), by = s2associated]
     for (i in 1:nrow(ds3)) {
       line <- ds3[i,s]
+      nsec <- ds3[i,number]
       text[line] <- gsub("# .... \\d* ?", paste0("# .... ", nsec, " "), text[line])
     }
   }
@@ -227,6 +228,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
     ds2[,`:=`(number = 1:.N), by = s1associated]
     for (i in 1:nrow(ds2)) {
       line <- ds2[i,s]
+      nsec <- ds2[i,number]
       text[line] <- gsub("# .. \\d* ?", paste0("# .. ", nsec, " "), text[line])
     }
   }
@@ -237,6 +239,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
     ds1[,`:=`(number = 1:.N - 1)]  
     for (i in 1:nrow(ds1)) {
       line <- ds1[i,s]
+      nsec <- ds1[i,number]
       text[line] <- gsub("# \\d* ?", paste0("# ", nsec, " "), text[line])
     }
   }
