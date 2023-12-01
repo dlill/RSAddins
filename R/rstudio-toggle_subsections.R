@@ -887,13 +887,16 @@ swapArg1Arg2 <- function() {
 #'
 #' @examples
 #' # Uncomment and try out
-#' 1+1
-#' a <- list(
-#'   a= 1:3,
-#'   b = list("a", "b", "c"),
-#'   d = list("a", "b", "c")
-#' )
-#' wup <- data.frame(a = 1+1, b ="c")
+1+1
+x <- 1:10 + 0.1
+x <- letters
+a <- list(
+  a= 1:3,
+  b = list("a", "b", "c"),
+  d = list("a", "b", "c")
+)
+wup <- data.frame(a = 1+1, b ="c")
+function(x) {bla}
 insertDput <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
@@ -914,11 +917,17 @@ insertDput <- function() {
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = "\n",id =  e$id)
     rstudioapi::setCursorPosition(position = rstudioapi::document_position(rowEnd + 1, 1), id = e$id)
     outputMdTable(x, NFLAGtribble = 2)
+  } else if (is.vector(x) && !is.list(x)) {
+    # Deparse elementary vectors one by one and output one element per row
+    deparsedElements <- lapply(x, deparse)
+    deparsedElements <- do.call(c, deparsedElements)
+    codeToInsert <- paste0(ifelse(length(deparsedElements > 1), "c(\n  ", ""), paste0(deparsedElements, collapse = ",\n  "), ifelse(length(deparsedElements > 1), "\n)", ""), "\n")
+    rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   } else {
-    codeToInsert <- paste0(variable, " <- ", paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
+    codeToInsert <- paste0(paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   }
-  # Too annoying with the loss of focus, but if I find a solution one day it would be cool
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
   # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
   # rstudioapi::setSelectionRanges(ranges, id = e$id)
   # rstudioapi::executeCommand("reindent")
