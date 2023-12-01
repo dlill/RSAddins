@@ -23,12 +23,13 @@
     "RSAddins::swapArg1Arg2" : "Ctrl+Shift+Alt+D",
     "RSAddins::duplicateArguments" : "Ctrl+O",
     "RSAddins::turnIntoFactor" : "Ctrl+Shift+K Ctrl+F",
-    "RSAddins::dtify" : "Ctrl+Shift+K Ctrl+D",
     "RSAddins::projectPathComment_fromSection" : "Ctrl+Shift+K Ctrl+P",
     "RSAddins::projectPathComment_allSections" : "Ctrl+Shift+K Ctrl+Shift+P",
     "RSAddins::collapseMultilineCode" : "Ctrl+Shift+K Ctrl+Shift+M",
     "RSAddins::flplotFromSectionHeader_allSections" : "Ctrl+Shift+K Ctrl+Shift+L",
     "RSAddins::toggleCommentForWholeSection" : "Ctrl+Shift+K Ctrl+Shift+C",
+    "RSAddins::deleteSection" : "Ctrl+Shift+K Ctrl+D",
+    "RSAddins::duplicateSection" : "Ctrl+Shift+K Ctrl+Shift+D",
     "RSsnippets::insertPlainTextSnippet" : "Ctrl+Shift+K Ctrl+Shift+Alt+S",
     "RSsnippets::asSnippet" : "Ctrl+Shift+Alt+S"
     

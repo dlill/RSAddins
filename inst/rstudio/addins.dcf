@@ -176,4 +176,14 @@ Description: Comment or uncomment a whole section
 Binding: toggleCommentForWholeSection
 Interactive: false
 
+Name: duplicateSection
+Description: Duplicate a whole section
+Binding: duplicateSection
+Interactive: false
+
+Name: deleteSection
+Description: Delete a whole section
+Binding: deleteSection
+Interactive: false
+
 

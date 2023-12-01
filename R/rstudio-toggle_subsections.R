@@ -1322,47 +1322,47 @@ guess_word <- function(textline, start, end) {
 
 
 # -------------------------------------------------------------------------#
-# 13 Dtify script ----
-# -------------------------------------------------------------------------#
-
-#' replace bare function calls to data.table functions by data.table::funCall
-#' 
-#' Works on whole script
-#' 
-#' @return
-#' @export
-#'
-#' @examples
-dtify <- function() {
-  e <- rstudioapi::getSourceEditorContext()
-  rstudioapi::documentSave(id = e$id)
-  text <- readLines(e$path)
-  
-  dtFunctions <- c("as.data.table", "copy", "data.table", "dcast", "fread", 
-                   "fwrite", "melt", "nafill", "rbindlist",
-                   "setcolorder", "setindex", "setindexv", "setkey", 
-                   "setkeyv", "setnafill", "setnames", "setorder", "setorderv", 
-                   "setreordervec", "transpose")
-  idxNoComment <- grep("^ *#", text, invert = TRUE)
-  regex <- paste0(
-    "(?<!data\\.table::)", # Ensure no leading data.table
-    "(",
-    paste0(dtFunctions, collapse = "|"),
-    ")",
-    "(?=\\()", # Ensure function call
-    ""
-  )
-  text <- gsub(regex, "data.table::\\1", text, perl = TRUE)
-  text <- paste0(text, collapse = "\n")
-  
-  rstudioapi::setDocumentContents(text = text, id = e$id)
-  rstudioapi::documentSave(id = e$id)
-  
-  sink <- NULL
-}
-
-
-# -------------------------------------------------------------------------#
+# # 13 Dtify script ----
+# # -------------------------------------------------------------------------#
+# 
+# #' replace bare function calls to data.table functions by data.table::funCall
+# #' 
+# #' Works on whole script
+# #' 
+# #' @return
+# #' @export
+# #'
+# #' @examples
+# dtify <- function() {
+#   e <- rstudioapi::getSourceEditorContext()
+#   rstudioapi::documentSave(id = e$id)
+#   text <- readLines(e$path)
+#   
+#   dtFunctions <- c("as.data.table", "copy", "data.table", "dcast", "fread", 
+#                    "fwrite", "melt", "nafill", "rbindlist",
+#                    "setcolorder", "setindex", "setindexv", "setkey", 
+#                    "setkeyv", "setnafill", "setnames", "setorder", "setorderv", 
+#                    "setreordervec", "transpose")
+#   idxNoComment <- grep("^ *#", text, invert = TRUE)
+#   regex <- paste0(
+#     "(?<!data\\.table::)", # Ensure no leading data.table
+#     "(",
+#     paste0(dtFunctions, collapse = "|"),
+#     ")",
+#     "(?=\\()", # Ensure function call
+#     ""
+#   )
+#   text <- gsub(regex, "data.table::\\1", text, perl = TRUE)
+#   text <- paste0(text, collapse = "\n")
+#   
+#   rstudioapi::setDocumentContents(text = text, id = e$id)
+#   rstudioapi::documentSave(id = e$id)
+#   
+#   sink <- NULL
+# }
+# 
+# 
+# # -------------------------------------------------------------------------#
 # 14 projectPath projectComment from section header ----
 # -------------------------------------------------------------------------#
 
@@ -1596,9 +1596,11 @@ flplotFromSectionHeader_allSections <- function() {
   invisible()  
 }
 
+
 # -------------------------------------------------------------------------#
-# Comment/uncomment section ----
+# Section handling ----
 # -------------------------------------------------------------------------#
+# .. Comment/uncomment section -----
 
 #' Comment/uncomment a whole section in one key stroke
 #'
@@ -1637,6 +1639,80 @@ toggleCommentForWholeSection <- function() {
   
 }
 
+# .. Duplicate section -----
+
+#' Duplicate a whole section in one key stroke
+#'
+#' @return
+#' @export
+#' @md
+#' @family 
+#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
+#'
+#' @examples
+duplicateSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  currentRow <- e$selection[[1]]$range$start[1]
+  
+  ds <- parseSectionTable(text)
+  idx <- min(which(currentRow - ds$line <= 0)) - 1
+  rowStart <- ds$line[idx]
+  rowEnd <- ds$line[idx + 1] - 1
+  
+  textRange <- text[seq(rowStart, rowEnd)]
+  # Handle edge cases with overflow
+  if (grepl("# -------------------------------------------------------------------------#",textRange[2]) & !grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])) {
+    textRange <- c(textRange[2], textRange)
+  } else if (!grepl("# -------------------------------------------------------------------------#",textRange[2]) & grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])) {
+    textRange <- textRange[-length(textRange)]
+  }
+  textRange <- paste0(paste0(c(textRange), collapse = "\n"), "\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = textRange, id = e$id)
+}
+
+
+
+# .. Delete section -----
+
+#' Delete a whole section in one key stroke
+#'
+#' @return
+#' @export
+#' @md
+#' @family 
+#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
+#'
+#' @examples
+deleteSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  currentRow <- e$selection[[1]]$range$start[1]
+  
+  ds <- parseSectionTable(text)
+  idx <- min(which(currentRow - ds$line <= 0)) - 1
+  rowStart <- ds$line[idx]
+  rowEnd <- ds$line[idx + 1] - 1
+  
+  textRange <- text[seq(rowStart, rowEnd)]
+  # Handle edge cases with overflow. Simply assume that if textRange[2] contains the section markup, that this markup will also be above rowStart
+  if ( grepl("# -------------------------------------------------------------------------#",textRange[2]) & !grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])
+      ) {
+    rowStart <- rowStart - 1
+  } else if (!grepl("# -------------------------------------------------------------------------#",textRange[2]) & grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])) {
+    rowEnd <- rowEnd - 1
+  }
+  
+  range <- rstudioapi::document_range(
+    start = rstudioapi::document_position(rowStart, 1),
+    end = rstudioapi::document_position(rowEnd + 1, 1)
+  )
+  
+  rstudioapi::modifyRange(location = range, text = "", id = e$id)
+}
 
 
 # 20 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
