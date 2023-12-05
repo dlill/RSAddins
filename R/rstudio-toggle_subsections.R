@@ -929,10 +929,10 @@ insertDput <- function() {
       deparsedNames <- lapply(names(x), deparse)
       deparsedNames <- do.call(c, deparsedNames)
       deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
-      deparsedElements <- paste0(deparsedNames, " = ", deparsedValues)
+      deparsedValues <- paste0(deparsedNames, " = ", deparsedValues)
     }
     
-    codeToInsert <- paste0("c(\n  ", paste0(deparsedElements, collapse = " ,\n  "), "\n)", "\n")
+    codeToInsert <- paste0("c(\n  ", paste0(deparsedValues, collapse = " ,\n  "), "\n)", "\n")
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   } else {
     codeToInsert <- paste0(paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
