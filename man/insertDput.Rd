@@ -15,10 +15,13 @@ data.frames are inserted as tibble::tribble
 \examples{
 # Uncomment and try out
 1+1
+x <- 1:10 + 0.1
+x <- letters
 a <- list(
   a= 1:3,
   b = list("a", "b", "c"),
   d = list("a", "b", "c")
 )
 wup <- data.frame(a = 1+1, b ="c")
+function(x) {bla}
 }

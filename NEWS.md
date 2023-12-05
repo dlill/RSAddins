@@ -1,3 +1,7 @@
+# RSAddins 1.1.2
+
+* Even better insertDput for vectors: Aligned "=" and "," for named vectors
+
 # RSAddins 1.1.1
 
 * Duplicate/delete section

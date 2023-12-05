@@ -884,19 +884,22 @@ swapArg1Arg2 <- function() {
 #' 
 #' @return
 #' @export
+#' @md
+#' @importFrom rstudioapi getSourceEditorContext documentSave insertText document_position setCursorPosition document_range setSelectionRanges executeCommand
+#' @importFrom stringr str_pad
 #'
 #' @examples
 #' # Uncomment and try out
-1+1
-x <- 1:10 + 0.1
-x <- letters
-a <- list(
-  a= 1:3,
-  b = list("a", "b", "c"),
-  d = list("a", "b", "c")
-)
-wup <- data.frame(a = 1+1, b ="c")
-function(x) {bla}
+#' 1+1
+#' x <- 1:10 + 0.1
+#' x <- letters
+#' a <- list(
+#'   a= 1:3,
+#'   b = list("a", "b", "c"),
+#'   d = list("a", "b", "c")
+#' )
+#' wup <- data.frame(a = 1+1, b ="c")
+#' function(x) {bla}
 insertDput <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
@@ -919,9 +922,17 @@ insertDput <- function() {
     outputMdTable(x, NFLAGtribble = 2)
   } else if (is.vector(x) && !is.list(x)) {
     # Deparse elementary vectors one by one and output one element per row
-    deparsedElements <- lapply(x, deparse)
-    deparsedElements <- do.call(c, deparsedElements)
-    codeToInsert <- paste0(ifelse(length(deparsedElements > 1), "c(\n  ", ""), paste0(deparsedElements, collapse = ",\n  "), ifelse(length(deparsedElements > 1), "\n)", ""), "\n")
+    deparsedValues <- lapply(x, deparse)
+    deparsedValues <- do.call(c, deparsedValues)
+    deparsedValues <- stringr::str_pad(deparsedValues, max(nchar(deparsedValues)), side = "right")
+    if (!is.null(names(x))) {
+      deparsedNames <- lapply(names(x), deparse)
+      deparsedNames <- do.call(c, deparsedNames)
+      deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
+      deparsedElements <- paste0(deparsedNames, " = ", deparsedValues)
+    }
+    
+    codeToInsert <- paste0("c(\n  ", paste0(deparsedElements, collapse = " ,\n  "), "\n)", "\n")
     rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   } else {
     codeToInsert <- paste0(paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
@@ -1709,7 +1720,7 @@ deleteSection <- function() {
   textRange <- text[seq(rowStart, rowEnd)]
   # Handle edge cases with overflow. Simply assume that if textRange[2] contains the section markup, that this markup will also be above rowStart
   if ( grepl("# -------------------------------------------------------------------------#",textRange[2]) & !grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])
-      ) {
+  ) {
     rowStart <- rowStart - 1
   } else if (!grepl("# -------------------------------------------------------------------------#",textRange[2]) & grepl("# -------------------------------------------------------------------------#", textRange[length(textRange)])) {
     rowEnd <- rowEnd - 1
