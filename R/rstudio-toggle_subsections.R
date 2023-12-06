@@ -892,7 +892,7 @@ swapArg1Arg2 <- function() {
 #' # Uncomment and try out
 #' 1+1
 #' x <- 1:10 + 0.1
-#' x <- letters
+#' x <- setNames(1:3 + 0.1,letters[1:3])
 #' a <- list(
 #'   a= 1:3,
 #'   b = list("a", "b", "c"),
@@ -916,28 +916,10 @@ insertDput <- function() {
   variable <- ifelse(grepl("<-", textPasted),gsub("(.*)<-.*", "\\1", textPasted), "x")
   x <- eval(parse(text = paste0("{", paste0(text, collapse = "\n"), "}")))
   
-  if (is.data.frame(x)) {
-    rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = "\n",id =  e$id)
-    rstudioapi::setCursorPosition(position = rstudioapi::document_position(rowEnd + 1, 1), id = e$id)
-    outputMdTable(x, NFLAGtribble = 2)
-  } else if (is.vector(x) && !is.list(x)) {
-    # Deparse elementary vectors one by one and output one element per row
-    deparsedValues <- lapply(x, deparse)
-    deparsedValues <- do.call(c, deparsedValues)
-    deparsedValues <- stringr::str_pad(deparsedValues, max(nchar(deparsedValues)), side = "right")
-    if (!is.null(names(x))) {
-      deparsedNames <- lapply(names(x), deparse)
-      deparsedNames <- do.call(c, deparsedNames)
-      deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
-      deparsedValues <- paste0(deparsedNames, " = ", deparsedValues)
-    }
-    
-    codeToInsert <- paste0("c(\n  ", paste0(deparsedValues, collapse = " ,\n  "), "\n)", "\n")
-    rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
-  } else {
-    codeToInsert <- paste0(paste0(deparse(x, width.cutoff = 20), collapse = "\n"), "\n")
-    rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
-  }
+  codeToInsert <- deparse2(x)
+  codeToInsert <- paste0(codeToInsert, collapse = "\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
   # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
   # rstudioapi::setSelectionRanges(ranges, id = e$id)
@@ -1038,6 +1020,57 @@ findFunctionCode <- function(documentText, row) {
   if ((length(text) + rowFunDef) <= row) warning("Cursor is below the complete function definition.")
   
   text
+}
+
+
+#' Featureful deparse: 
+#' 
+#' * data.frames are deparsed into tibble::tribble() calls with aligned columns
+#' * vectors are dputted with one entry per row and aligned equal signs and commas
+#' * Other objects are simply deparsed, with the shortest possible width.cutoff
+#' 
+#' @param x an object to deparse
+#'
+#' @return deparsed code, collapsed into length 1
+#' @export
+#'
+#' @examples
+#' # Uncomment and try out
+#' library(magrittr)
+#' deparse2(1+1) %>% cat(sep = "\n")
+#' deparse2(1:10 + 0.1) %>% cat(sep = "\n")
+#' deparse2(setNames(1:26 + 0.1, letters)[1:10]) %>% cat(sep = "\n")
+#' deparse2(list(
+#'   a= 1:3,
+#'   b = list("a", "b", "c"),
+#'   d = list("a", "b", "c")
+#' )) %>% cat(sep = "\n")
+#' deparse2(data.frame(a = 1+1, b = c("c", "sdafksdfl"))) %>% cat(sep = "\n")
+#' deparse2(function(x) {bla}) %>% cat(sep = "\n")
+deparse2 <- function(x) {
+  if (is.data.frame(x)) {
+    deparsedCode <- outputMdTable(x, NFLAGtribble = 1)
+  } else if (is.vector(x) && !is.list(x)) {
+    # Deparse elementary vectors one by one and output one element per row
+    deparsedValues <- lapply(x, deparse)
+    deparsedValues <- do.call(c, deparsedValues)
+    deparsedValues <- stringr::str_pad(deparsedValues, max(nchar(deparsedValues)), side = "right")
+    if (!is.null(names(x))) {
+      deparsedNames <- lapply(names(x), deparse)
+      deparsedNames <- do.call(c, deparsedNames)
+      deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
+      deparsedValues <- paste0(deparsedNames, " = ", deparsedValues)
+    }
+    # Commas in beteween
+    if (length(deparsedValues) > 1) {
+      deparsedValues[-length(deparsedValues)] <- paste0(deparsedValues[-length(deparsedValues)], " ,")
+    }
+    deparsedValues <- paste0("  ", deparsedValues)
+    deparsedCode <- c("c(", deparsedValues, ")")
+  } else {
+    deparsedCode <- deparse(x, width.cutoff = 20)
+  }
+  deparsedCode
 }
 
 
@@ -1244,8 +1277,8 @@ toggle_roxyComments <- function() {
 #' @export
 #'
 #' @examples
-#' dwup <- data.table::data.table(blablabla = c("wupwupwupwupwupwupwup", "bla"))
-#' dwup[,`:=`(blablabla)]
+#' dwup <- data.table::data.table(bla = c("wupwup", "bla"))
+#' dwup[,`:=`(bla)]
 turnIntoFactor <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
@@ -1265,10 +1298,8 @@ turnIntoFactor <- function() {
   if (grepl("\\w+\\[,`:=`\\(\\w+\\)\\]", textline)) {
     evaledLevels <- textline
     evaledLevels <- gsub("`:=`\\(","unique(", evaledLevels)
-    evaledLevels <- deparse(eval(parse(text = evaledLevels)), width.cutoff = 20)
+    evaledLevels <- deparse2(eval(parse(text = evaledLevels)))
     evaledLevels <- paste0(evaledLevels, collapse = "\n")
-    evaledLevels[1] <- gsub("c(", "c(\n", evaledLevels[1], fixed = TRUE)
-    evaledLevels[length(evaledLevels)] <- gsub(")", "\n)", evaledLevels[length(evaledLevels)], fixed = TRUE)
     factorCall2 <- paste0(word, " = factor(", word, ", levels = ", evaledLevels, ")")
     newLine2 <- gsub(word, factorCall2, textline)
     newLine <- paste0(newLine,"\n", newLine2)

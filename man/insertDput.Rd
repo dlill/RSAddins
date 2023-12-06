@@ -16,7 +16,7 @@ data.frames are inserted as tibble::tribble
 # Uncomment and try out
 1+1
 x <- 1:10 + 0.1
-x <- letters
+x <- setNames(1:3 + 0.1,letters[1:3])
 a <- list(
   a= 1:3,
   b = list("a", "b", "c"),

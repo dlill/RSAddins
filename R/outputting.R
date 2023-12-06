@@ -76,7 +76,7 @@ outputMdTable <- function(dt, split_by = NULL, filename = NULL, format = c("mark
     kt <- kt[-length(kt)]
     kt <- c(row0, row1, kt, rowN, "")
     
-    if (NFLAGtribble == 1) cat(kt, sep = "\n")
+    # if (NFLAGtribble == 1) cat(kt, sep = "\n")
     if (NFLAGtribble == 2) {
       e <- rstudioapi::getSourceEditorContext()
       rstudioapi::documentSave(e$id)
