@@ -1,3 +1,7 @@
+# RSAddins 1.1.3
+
+* Bugfix for loopdebugger when using mclapply
+
 # RSAddins 1.1.2
 
 * Even better insertDput for vectors: Aligned "=" and "," for named vectors
