@@ -315,9 +315,6 @@ insert_loopdebugger <- function() {
   
 }
 
-usethis::use_version()
-
-rstudioapi::navigateToFile(file.path(rstudioapi::getActiveProject(), "NEWS.md"))
 
 
 # -------------------------------------------------------------------------#
