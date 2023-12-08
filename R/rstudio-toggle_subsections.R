@@ -262,8 +262,8 @@ extract_for <- function(textline) {
 #' @rdname extract_loopargs
 #' @export
 extract_apply <- function(textline) {
-  loopval <- trimws(gsub(".*apply\\((.+), *function.*", "\\1", textline))
-  loopvar <- gsub(".*apply\\(.+, *function\\( *(\\w+) *\\).*", "\\1", textline)
+  loopval <- trimws(gsub(".*apply\\((.+), *(mc.cores.*)? *function.*", "\\1", textline))
+  loopvar <- gsub(".*apply\\(.+, * (mc.cores.*)? *function\\( *(\\w+) *\\).*", "\\2", textline)
   list(loopvar = loopvar, loopval = loopval)
 }
 
@@ -282,6 +282,7 @@ extract_loopargs <- function(textline) {
   if (grepl("apply\\(", textline)) return(extract_apply(textline))
   if (grepl("for ?\\(", textline)) return(extract_for(textline))
 }
+
 
 #' Insert the arguments of a loop into the script
 #' 
@@ -314,6 +315,9 @@ insert_loopdebugger <- function() {
   
 }
 
+usethis::use_version()
+
+rstudioapi::navigateToFile(file.path(rstudioapi::getActiveProject(), "NEWS.md"))
 
 
 # -------------------------------------------------------------------------#
