@@ -201,7 +201,7 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
 renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) {
   text <- readLines(filename)
   
-  # .. 1 Get lines -----
+  # .. 5 Get lines -----
   s1all <- s1 <- grep("(?<!Exit) -{4}$", text, perl = TRUE)
   if (FLAGfunctionAsSection){
     functions <- grep("function(", text, fixed = TRUE)
@@ -210,7 +210,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
   s2 <- grep(" -{5}$", text)
   s3 <- grep(" -{6}$", text)
   
-  # .. 2  # Associate subsubs to subs -----
+  # .. 6  # Associate subsubs to subs -----
   if (length(s3)){
     ds3 <- data.table::data.table(s = s3)
     ds3[,`:=`(s2associated = which.min(s > s2) ), by = (1:nrow(ds3))]
@@ -221,7 +221,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
       text[line] <- gsub("# .... \\d* ?", paste0("# .... ", nsec, " "), text[line])
     }
   }
-  # .. 3  # Associate subs to s -----
+  # .. 7  # Associate subs to s -----
   if (length(s2)){
     ds2 <- data.table::data.table(s = s2)
     ds2[,`:=`(s1associated = which.min(s > s1all) ), by = (1:nrow(ds2))]
@@ -233,7 +233,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
     }
   }
   
-  # .. 4 Number sections -----
+  # .. 8 Number sections -----
   if (length(s1)){
     ds1 <- data.table::data.table(s = s1)
     ds1[,`:=`(number = 1:.N - 1)]  
@@ -797,6 +797,8 @@ refactor_functionCall <- function() {
 #'
 #' @examples
 #' textline <- "wup <- fun(a, b)"
+#' textline <- "wup <- fun(aa, a, b)"
+#' textline <- "wup <- aaa(aa, a, b)"
 duplicateArguments <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
@@ -808,7 +810,7 @@ duplicateArguments <- function() {
   args <- strsplit(args, ",")[[1]]
   args <- trimws(args)
   codeToInsert <- textline
-  for (x in args) codeToInsert <- gsub(x, paste0(x, " = ", x), codeToInsert)
+  for (x in args) codeToInsert <- gsub(paste0("\\b", x,"\\b"), paste0(x, " = ", x), codeToInsert)
   nwhite <- nchar(gsub("\\(.*","", textline))
   codeToInsert <- gsub(",", paste0(",\n", paste0(rep(" ",nwhite), collapse = "")), codeToInsert)
   
@@ -1597,10 +1599,10 @@ flplotFromSectionHeader_allSections <- function() {
   
   # Construct flplot name
   # regexplanation: 
-  # Take care of indent
-  # There can be multiple #'s due to commenting of full section
-  # Take care of dots for subsections and subsubsections
-  # Stip dashes at the end of the sections
+  # * Take care of indent
+  # * There can be multiple #'s due to commenting of full section
+  # * Take care of dots for subsections and subsubsections
+  # * Strip dashes at the end of the sections
   ds[,`:=`(flplot = trimws(gsub("^ *(# *)+\\.* *\\d+| *-*$", "", text[line])))]
   ds[,`:=`(flplot = gsub(" ", "_", flplot))]
   # Disallow special characters. Potentially unsafe regex, but ok for this purpose
@@ -1609,7 +1611,6 @@ flplotFromSectionHeader_allSections <- function() {
   # Apply heuristics to shorten filename
   ds[,`:=`(flplot = gsub("_-_", "-", flplot))] # many redundant spaces
   ds[,`:=`(flplot = gsub("__", "_", flplot))]  # many redundant spaces
-  ds[,`:=`(flplot = gsub("_([A-Z0-9])", "\\1", flplot))] # Camel case can be shortened
   # Assemble filename  
   ds[,`:=`(flplot = sprintf(paste0("%0", max(s1) %/% 10, "d",
                                    "%0", max(s2) %/% 10, "d",
@@ -1635,7 +1636,7 @@ flplotFromSectionHeader_allSections <- function() {
   }), by = "line"]
   ds <- ds[!is.na(lineFlplot)]
   
-  # Move flplot assignment to top of section and insert new filename
+  # Insert new filename
   i <- (rev(seq_len(nrow(ds))))[[1]]
   for (i in rev(seq_len(nrow(ds)))) {
     line_rm <- ds[i,lineFlplot]
@@ -1650,9 +1651,9 @@ flplotFromSectionHeader_allSections <- function() {
 
 
 # -------------------------------------------------------------------------#
-# Section handling ----
+# 20 Section handling ----
 # -------------------------------------------------------------------------#
-# .. Comment/uncomment section -----
+# .. 1 Comment/uncomment section -----
 
 #' Comment/uncomment a whole section in one key stroke
 #'
@@ -1691,7 +1692,7 @@ toggleCommentForWholeSection <- function() {
   
 }
 
-# .. Duplicate section -----
+# .. 2 Duplicate section -----
 
 #' Duplicate a whole section in one key stroke
 #'
@@ -1722,12 +1723,12 @@ duplicateSection <- function() {
   }
   textRange <- paste0(paste0(c(textRange), collapse = "\n"), "\n")
   
-  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = textRange, id = e$id)
+  rstudioapi::insertText(location = rstudioapi::document_position(rowStart, 1), text = textRange, id = e$id)
 }
 
 
 
-# .. Delete section -----
+# .. 3 Delete section -----
 
 #' Delete a whole section in one key stroke
 #'
@@ -1767,7 +1768,7 @@ deleteSection <- function() {
 }
 
 
-# 20 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
+# 21 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
 # 
 # [ ] Sequential shortcuts. ctrl+k ctrl+k
 # [ ] Sequential shortcuts. ctrl+k ctrl+u
@@ -1819,7 +1820,7 @@ deleteSection <- function() {
 # 
 # 
 # 
-# 21 [ ] >>>> // Continue here <<<<<<<<<<< ----
+# 22 [ ] >>>> // Continue here <<<<<<<<<<< ----
 
 
 
