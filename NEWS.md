@@ -1,3 +1,7 @@
+# RSAddins 1.1.4
+
+* Getting flplot and fltab from sections now renames files and file paths in reports.
+
 # RSAddins 1.1.3
 
 * Bugfix for loopdebugger when using mclapply
