@@ -1619,7 +1619,7 @@ grepInUncommentedRange <- function(pattern = " *flplot *<- *", x, start, end) {
 #' @export
 #'
 #' @examples
-renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab")) {
+renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab"), .outputFolder) {
   plotOrTab <- match.arg(plotOrTab)
   
   dsRename <- data.table::copy(ds)
@@ -1635,20 +1635,22 @@ renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab")
   # Remove dupes (don't rename when you don't know which of the two files to rename)
   dsRenameDupes <- dsRename[duplicated(oldFl)]
   dsRename <- dsRename[!dsRenameDupes, on = "oldFl"]
-  if (nrow(dsRenameDupes) ==0) {return()}
+  if (nrow(dsRename) ==0) {return()}
   dsRename[,`:=`(oldFlParsed = tryCatch(eval(parse(text = oldFl)), error = function(x) NA_character_)), by = 1:nrow(dsRename)]
   dsRename[,`:=`(newFlParsed = tryCatch(eval(parse(text = newFl)), error = function(x) NA_character_)), by = 1:nrow(dsRename)]
   # Only rename files which exists and which are different from before
   dsRename <- dsRename[!is.na(oldFlParsed)]
-  if (nrow(dsRenameDupes) ==0) {return()}
+  if (nrow(dsRename) ==0) {return()}
   dsRename <- dsRename[file.exists(oldFlParsed)]
-  if (nrow(dsRenameDupes) ==0) {return()}
+  if (nrow(dsRename) ==0) {return()}
   dsRename <- dsRename[oldFlParsed != newFlParsed]
-  if (nrow(dsRenameDupes) ==0) {return()}
+  if (nrow(dsRename) ==0) {return()}
   
   # Construct file paths which are relative to project
   eat <- function(x) {gsub("[^/]+/\\.\\./","",gsub("/+","/", x))}
-  dsRename[,`:=`(oldFlWork = gsub(here::here(), "", eat(file.path(getwd(), oldFlParsed))))]
+  dsRename[,`:=`(oldFlWork = eat(gsub(here::here(), "", eat(file.path(getwd(), oldFlParsed)))))]
+  dsRename[,`:=`(oldFlWork = gsub("/", "/+", oldFlWork))] # turn oldFlWork into a regex which can contain multiple / 
+  dsRename[,`:=`(oldFlWork = gsub(".", "\\.", oldFlWork, fixed = TRUE))] # turn oldFlWork into a regex which can contain multiple / 
   dsRename[,`:=`(newFlWork = gsub(here::here(), "", eat(file.path(getwd(), newFlParsed))))]
   
   # Rename the files
@@ -1659,13 +1661,13 @@ renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab")
   # Prepare to walk through report
   reportFiles <- list.files(here::here("Report"), pattern = ".rmd$", full.names = TRUE, recursive = TRUE)
   for (flx in reportFiles) {
+    textReport <- readLines(flx)
     for (i in seq_len(nrow(dsRename))) {
-      textReport <- readLines(flx)
-      textToReplace <- grep(dsRename[i,oldFlWork], textReport, fixed = TRUE)
+      textToReplace <- grep(dsRename[i,oldFlWork], textReport)
       if (length(textToReplace)) {message("Replacing ", dsRename[i,oldFlWork], " in ", gsub(here::here(), "", flx))}
-      textReport <- gsub(dsRename[i,oldFlWork], dsRename[i,newFlWork], textReport, fixed = TRUE)
-      writeLines(textReport, flx)
+      textReport <- gsub(dsRename[i,oldFlWork], dsRename[i,newFlWork], textReport)
     }  
+    writeLines(textReport, flx)
   }
 }
 
@@ -1680,6 +1682,9 @@ renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab")
 #'
 #' @examples
 flplotFromSectionHeader_allSections <- function() {
+  try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
+  .outputFolder <- file.path("../Output", gsub("SCRIPT_|.R$", "", basename(rstudioapi::getSourceEditorContext()$path)))
+  
   # Update this, so it is in sync
   RSAddins::renumber_sections()
   
@@ -1716,9 +1721,9 @@ flplotFromSectionHeader_allSections <- function() {
   ds[,`:=`(lineFltab = {grepInUncommentedRange(pattern = " *fltab *<- *", x = text, start = line, end = lineEnd)}), by = "line"]
   
   # Potentially rename filenames
-  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "plot")
-  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "tab")
-
+  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "plot", .outputFolder = .outputFolder)
+  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "tab" , .outputFolder = .outputFolder)
+  
   # Insert new filename
   i <- (rev(seq_len(nrow(ds))))[[1]]
   for (i in rev(seq_len(nrow(ds)))) {
