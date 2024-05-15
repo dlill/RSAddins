@@ -14,4 +14,6 @@ Turn fun(a, b) into fun(a = a, b = b)
 }
 \examples{
 textline <- "wup <- fun(a, b)"
+textline <- "wup <- fun(aa, a, b)"
+textline <- "wup <- aaa(aa, a, b)"
 }

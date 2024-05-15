@@ -201,7 +201,7 @@ renumber_sections <- function(FLAGfunctionAsSection = FALSE) {
 renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) {
   text <- readLines(filename)
   
-  # .. 1 Get lines -----
+  # .. 5 Get lines -----
   s1all <- s1 <- grep("(?<!Exit) -{4}$", text, perl = TRUE)
   if (FLAGfunctionAsSection){
     functions <- grep("function(", text, fixed = TRUE)
@@ -210,7 +210,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
   s2 <- grep(" -{5}$", text)
   s3 <- grep(" -{6}$", text)
   
-  # .. 2  # Associate subsubs to subs -----
+  # .. 6  # Associate subsubs to subs -----
   if (length(s3)){
     ds3 <- data.table::data.table(s = s3)
     ds3[,`:=`(s2associated = which.min(s > s2) ), by = (1:nrow(ds3))]
@@ -221,7 +221,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
       text[line] <- gsub("# .... \\d* ?", paste0("# .... ", nsec, " "), text[line])
     }
   }
-  # .. 3  # Associate subs to s -----
+  # .. 7  # Associate subs to s -----
   if (length(s2)){
     ds2 <- data.table::data.table(s = s2)
     ds2[,`:=`(s1associated = which.min(s > s1all) ), by = (1:nrow(ds2))]
@@ -233,7 +233,7 @@ renumber_sections_filename <- function(filename, FLAGfunctionAsSection = FALSE) 
     }
   }
   
-  # .. 4 Number sections -----
+  # .. 8 Number sections -----
   if (length(s1)){
     ds1 <- data.table::data.table(s = s1)
     ds1[,`:=`(number = 1:.N - 1)]  
@@ -797,6 +797,8 @@ refactor_functionCall <- function() {
 #'
 #' @examples
 #' textline <- "wup <- fun(a, b)"
+#' textline <- "wup <- fun(aa, a, b)"
+#' textline <- "wup <- aaa(aa, a, b)"
 duplicateArguments <- function() {
   e <- rstudioapi::getSourceEditorContext()
   rstudioapi::documentSave(id = e$id)
@@ -808,7 +810,7 @@ duplicateArguments <- function() {
   args <- strsplit(args, ",")[[1]]
   args <- trimws(args)
   codeToInsert <- textline
-  for (x in args) codeToInsert <- gsub(x, paste0(x, " = ", x), codeToInsert)
+  for (x in args) codeToInsert <- gsub(paste0("\\b", x,"\\b"), paste0(x, " = ", x), codeToInsert)
   nwhite <- nchar(gsub("\\(.*","", textline))
   codeToInsert <- gsub(",", paste0(",\n", paste0(rep(" ",nwhite), collapse = "")), codeToInsert)
   
@@ -1605,6 +1607,100 @@ parseSectionTable <- function(text) {
   data.table::copy(ds) # update print behaviour
 }
 
+
+#' In text, search for regex in the range of line:lineEnd and return the global index in text
+#'
+#' @param text 
+#' @param line 
+#' @param lineEnd 
+#' @param regex 
+#'
+#' @return index as it would be returned by grep
+#' @export
+#'
+#' @examples
+#' text <- c("pattern but out of range","asdf","pattern", "sadlkf")
+#' grepInUncommentedRange(pattern = "pattern", x = text, start = 2, end = 3)
+#' grepInUncommentedRange(pattern = "pattern", x = paste0("# ", text), start = 2, end = 3)
+grepInUncommentedRange <- function(pattern = " *flplot *<- *", x, start, end) {
+  isCommentedOut <- all(grepl("^ *#", x[start:end]))
+  idxInRange <- grep(pattern, x[start:end])
+  # Ignore sections if they are fully commented-out
+  if (length(idxInRange) == 0) {
+    NA_real_
+  } else if (isCommentedOut || length(idxInRange) > 1) {
+    if (length(idxInRange) > 1) {
+      message("Spotted multiple plot files in one (sub/subsub)-section. This section will be unchanged.")
+    }
+    NA_real_
+  } else {
+    start + idxInRange - 1
+  }
+}
+
+#' Work horse to rename files and update the file paths in all reports
+#'
+#' @param ds 
+#' @param plotOrTab 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+renameFilesInPlaceAndInReport <- function(ds, text, plotOrTab = c("plot", "tab"), .outputFolder) {
+  plotOrTab <- match.arg(plotOrTab)
+  
+  dsRename <- data.table::copy(ds)
+  if (plotOrTab == "plot") {
+    dsRename[,`:=`(oldFl = gsub(" *flplot *<- *","", text[lineFlplot]))]
+    dsRename[,`:=`(newFl = paste0("file.path(.outputFolder, \"", fl, ".pdf\")"))]
+    dsRename <- dsRename[!is.na(lineFlplot)]
+  } else if (plotOrTab == "tab") {
+    dsRename[,`:=`(oldFl = gsub(" *fltab *<- *","", text[lineFltab]))]
+    dsRename[,`:=`(newFl = paste0("file.path(.outputFolder, \"", fl, ".txt\")"))]
+    dsRename <- dsRename[!is.na(lineFltab)]
+  } 
+  # Remove dupes (don't rename when you don't know which of the two files to rename)
+  dsRenameDupes <- dsRename[duplicated(oldFl)]
+  dsRename <- dsRename[!dsRenameDupes, on = "oldFl"]
+  if (nrow(dsRename) ==0) {return()}
+  dsRename[,`:=`(oldFlParsed = tryCatch(eval(parse(text = oldFl)), error = function(x) NA_character_)), by = 1:nrow(dsRename)]
+  dsRename[,`:=`(newFlParsed = tryCatch(eval(parse(text = newFl)), error = function(x) NA_character_)), by = 1:nrow(dsRename)]
+  # Only rename files which exists and which are different from before
+  dsRename <- dsRename[!is.na(oldFlParsed)]
+  if (nrow(dsRename) ==0) {return()}
+  dsRename <- dsRename[file.exists(oldFlParsed)]
+  if (nrow(dsRename) ==0) {return()}
+  dsRename <- dsRename[oldFlParsed != newFlParsed]
+  if (nrow(dsRename) ==0) {return()}
+  
+  # Construct file paths which are relative to project
+  eat <- function(x) {gsub("[^/]+/\\.\\./","",gsub("/+","/", x))}
+  dsRename[,`:=`(oldFlWork = eat(gsub(here::here(), "", eat(file.path(getwd(), oldFlParsed)))))]
+  dsRename[,`:=`(oldFlWork = gsub("/", "/+", oldFlWork))] # turn oldFlWork into a regex which can contain multiple / 
+  dsRename[,`:=`(oldFlWork = gsub(".", "\\.", oldFlWork, fixed = TRUE))] # turn oldFlWork into a regex which can contain multiple / 
+  dsRename[,`:=`(newFlWork = gsub(here::here(), "", eat(file.path(getwd(), newFlParsed))))]
+  
+  # Rename the files
+  for (i in seq_len(nrow(dsRename))) {
+    file.rename(dsRename[i,oldFlParsed], dsRename[i,newFlParsed])
+  }
+  
+  # Prepare to walk through report
+  reportFiles <- list.files(here::here("Report"), pattern = ".rmd$", full.names = TRUE, recursive = TRUE)
+  for (flx in reportFiles) {
+    textReport <- readLines(flx)
+    for (i in seq_len(nrow(dsRename))) {
+      textToReplace <- grep(dsRename[i,oldFlWork], textReport)
+      if (length(textToReplace)) {message("Replacing ", dsRename[i,oldFlWork], " in ", gsub(here::here(), "", flx))}
+      textReport <- gsub(dsRename[i,oldFlWork], dsRename[i,newFlWork], textReport)
+    }  
+    writeLines(textReport, flx)
+  }
+}
+
+
+
 #' Title
 #'
 #' @param x 
@@ -1614,6 +1710,9 @@ parseSectionTable <- function(text) {
 #'
 #' @examples
 flplotFromSectionHeader_allSections <- function() {
+  try(setwd(dirname(rstudioapi::getSourceEditorContext()$path)))
+  .outputFolder <- file.path("../Output", gsub("SCRIPT_|.R$", "", basename(rstudioapi::getSourceEditorContext()$path)))
+  
   # Update this, so it is in sync
   RSAddins::renumber_sections()
   
@@ -1625,50 +1724,47 @@ flplotFromSectionHeader_allSections <- function() {
   
   # Construct flplot name
   # regexplanation: 
-  # Take care of indent
-  # There can be multiple #'s due to commenting of full section
-  # Take care of dots for subsections and subsubsections
-  # Stip dashes at the end of the sections
-  ds[,`:=`(flplot = trimws(gsub("^ *(# *)+\\.* *\\d+| *-*$", "", text[line])))]
-  ds[,`:=`(flplot = gsub(" ", "_", flplot))]
+  # * Take care of indent
+  # * There can be multiple #'s due to commenting of full section
+  # * Take care of dots for subsections and subsubsections
+  # * Strip dashes at the end of the sections
+  ds[,`:=`(fl = trimws(gsub("^ *(# *)+\\.* *\\d+| *-*$", "", text[line])))]
+  ds[,`:=`(fl = gsub(" ", "_", fl))]
   # Disallow special characters. Potentially unsafe regex, but ok for this purpose
-  ds[,`:=`(flplot = gsub("[,(){};/\\\\'\"]", "", flplot))]
-  ds[,`:=`(flplot = gsub("\\[|\\]", "", flplot))]
+  ds[,`:=`(fl = gsub("[,(){};/\\\\'\"]", "", fl))]
+  ds[,`:=`(fl = gsub("\\[|\\]", "", fl))]
   # Apply heuristics to shorten filename
-  ds[,`:=`(flplot = gsub("_-_", "-", flplot))] # many redundant spaces
-  ds[,`:=`(flplot = gsub("__", "_", flplot))]  # many redundant spaces
-  ds[,`:=`(flplot = gsub("_([A-Z0-9])", "\\1", flplot))] # Camel case can be shortened
+  ds[,`:=`(fl = gsub("_-_", "-", fl))] # many redundant spaces
+  ds[,`:=`(fl = gsub("__", "_", fl))]  # many redundant spaces
   # Assemble filename  
-  ds[,`:=`(flplot = sprintf(paste0("%0", max(s1) %/% 10, "d",
-                                   "%0", max(s2) %/% 10, "d",
-                                   "%0", max(s3) %/% 10, "d",
-                                   "_%s.pdf"),s1,s2,s3,flplot))]
+  ds[,`:=`(fl = sprintf(paste0("%0", max(s1) %/% 10, "d",
+                               "%0", max(s2) %/% 10, "d",
+                               "%0", max(s3) %/% 10, "d",
+                               "_%s"),s1,s2,s3,fl))]
   
-  # Identify subsections with flplot
-  ds[,`:=`(lineNext = c(line[-1],length(text)))]
-  ds[,`:=`(lineFlplot = {
-    isCommentedOut <- all(grepl("^ *#", text[line:lineNext]))
-    linesFlplot <- grep(" *flplot *<- *", text[line:lineNext])
-    # Ignore sections if they are fully commented-out
-    if (length(linesFlplot) == 0) {
-      NA_real_
-    } else if (isCommentedOut || length(linesFlplot) > 1) {
-      if (length(linesFlplot) > 1) {
-        message("Spotted multiple plot files in one (sub/subsub)-section. This section will be unchanged.")
-      }
-      NA_real_
-    } else {
-      line + linesFlplot - 1
-    }
-  }), by = "line"]
-  ds <- ds[!is.na(lineFlplot)]
   
-  # Move flplot assignment to top of section and insert new filename
+  # Identify subsections with flplot and fltab
+  ds[,`:=`(lineEnd = c(line[-1] - 1,length(text)))]
+  ds[,`:=`(lineFlplot = {grepInUncommentedRange(pattern = " *flplot *<- *", x = text, start = line, end = lineEnd)}), by = "line"]
+  ds[,`:=`(lineFltab = {grepInUncommentedRange(pattern = " *fltab *<- *", x = text, start = line, end = lineEnd)}), by = "line"]
+  
+  # Potentially rename filenames
+  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "plot", .outputFolder = .outputFolder)
+  renameFilesInPlaceAndInReport(ds = ds, text = text, plotOrTab = "tab" , .outputFolder = .outputFolder)
+  
+  # Insert new filename
   i <- (rev(seq_len(nrow(ds))))[[1]]
   for (i in rev(seq_len(nrow(ds)))) {
-    line_rm <- ds[i,lineFlplot]
-    text_replace <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", flplot, "\")")]
-    text[line_rm] <- text_replace
+    if (!is.na(ds[i,lineFlplot])){
+      line_rm <- ds[i,lineFlplot]
+      text_replace <- ds[i,paste0("flplot <- file.path(.outputFolder, \"", fl, ".pdf\")")]
+      text[line_rm] <- text_replace
+    }
+    if (!is.na(ds[i,lineFltab])){
+      line_rm <- ds[i,lineFltab]
+      text_replace <- ds[i,paste0("fltab <- file.path(.outputFolder, \"", fl, ".txt\")")]
+      text[line_rm] <- text_replace
+    }
   }
   rstudioapi::setDocumentContents(paste0(c(text, ""), collapse = "\n"), e$id)
   
@@ -1677,10 +1773,12 @@ flplotFromSectionHeader_allSections <- function() {
 }
 
 
+
+
 # -------------------------------------------------------------------------#
-# Section handling ----
+# 21 Section handling ----
 # -------------------------------------------------------------------------#
-# .. Comment/uncomment section -----
+# .. 1 Comment/uncomment section -----
 
 #' Comment/uncomment a whole section in one key stroke
 #'
@@ -1719,7 +1817,7 @@ toggleCommentForWholeSection <- function() {
   
 }
 
-# .. Duplicate section -----
+# .. 2 Duplicate section -----
 
 #' Duplicate a whole section in one key stroke
 #'
@@ -1750,12 +1848,12 @@ duplicateSection <- function() {
   }
   textRange <- paste0(paste0(c(textRange), collapse = "\n"), "\n")
   
-  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = textRange, id = e$id)
+  rstudioapi::insertText(location = rstudioapi::document_position(rowStart, 1), text = textRange, id = e$id)
 }
 
 
 
-# .. Delete section -----
+# .. 3 Delete section -----
 
 #' Delete a whole section in one key stroke
 #'
@@ -1836,7 +1934,7 @@ extractResource <- function() {
 }
 
 
-# 20 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
+# 22 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
 # 
 # [ ] Sequential shortcuts. ctrl+k ctrl+k
 # [ ] Sequential shortcuts. ctrl+k ctrl+u
@@ -1888,7 +1986,7 @@ extractResource <- function() {
 # 
 # 
 # 
-# 21 [ ] >>>> // Continue here <<<<<<<<<<< ----
+# 23 [ ] >>>> // Continue here <<<<<<<<<<< ----
 
 
 
