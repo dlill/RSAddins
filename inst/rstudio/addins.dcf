@@ -187,3 +187,9 @@ Binding: deleteSection
 Interactive: false
 
 
+Name: extractResource
+Description: Extract a current function into Resources
+Binding: extractResource
+Interactive: false
+
+

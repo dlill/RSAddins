@@ -1024,6 +1024,30 @@ findFunctionCode <- function(documentText, row) {
 }
 
 
+#' Title
+#'
+#' @param rowStart start of function code, result from findFunctionStartRow()
+#' @param documentText 
+#'
+#' @return indices of the roxy skeleton
+#' @export
+findRoxyIdxs <- function(rowStart, documentText) {
+  roxyActive <- TRUE
+  roxyIdxs <- c()
+  lastRoxyIdx <- rowStart
+  while (roxyActive == TRUE) {
+    newRoxyIdx <- lastRoxyIdx - 1
+    roxyFound <- grepl("^#'", documentText[newRoxyIdx])
+    if (!roxyFound) break
+    roxyIdxs <- c(roxyIdxs, newRoxyIdx)
+    lastRoxyIdx <- newRoxyIdx
+  }
+  roxyIdxs <- sort(setdiff(roxyIdxs, rowStart))
+  roxyIdxs
+}
+
+
+
 #' Featureful deparse: 
 #' 
 #' * data.frames are deparsed into tibble::tribble() calls with aligned columns
@@ -1096,6 +1120,9 @@ collapseMultilineCode <- function() {
   
   text <- paste0(c(
     "",
+    "# --- Collapsed multiline code pure ---- ",
+    text,
+    "",
     "# --- Collapsed multiline code. ---- ",
     "# For snippets, the following things are important: ", 
     "#  1. Wrap the expression into `r {expr}` by using the surrounding lines.",
@@ -1107,6 +1134,7 @@ collapseMultilineCode <- function() {
     "# Note: The collapsed code has all comments removed.",
     "",
     paste0("`r {",text,"}`"),
+    "",
     "",
     "# --- End collapsed multiline code. ---- ",
     ""
@@ -1764,6 +1792,47 @@ deleteSection <- function() {
   )
   
   rstudioapi::modifyRange(location = range, text = "", id = e$id)
+}
+
+# -------------------------------------------------------------------------#
+# Extract resource ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+extractResource <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  row <- e$selection[[1]]$range$start[1]
+  documentText <- readLines(e$path)
+  
+  rowStart <- findFunctionStartRow(documentText, row)
+  
+  roxyIdxs <- findRoxyIdxs(rowStart, documentText)
+  roxyText <- documentText[roxyIdxs]
+  
+  funText <- findFunctionCode(documentText, row)
+  text <- c(roxyText, funText)
+  
+  funName <- trimws(gsub("<- *function.*","", funText[1]))
+  
+  # Export to Resources
+  dir.create("Resources", FALSE)
+  fl <- file.path("Resources", paste0(funName, ".R"))
+  writeLines(c(text, ""), fl)
+  message(fl, " was created or overwritten.")
+  
+  # Insert source call
+  codeToInsert <- paste0("\nsource(\"Resources/", funName, ".R\")\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(min(c(rowStart, roxyIdxs)) - 1, 1), 
+                         text = codeToInsert, e$id)
+  rstudioapi::documentSave(id = e$id)
 }
 
 

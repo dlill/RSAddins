@@ -1,3 +1,8 @@
+# RSAddins 1.1.4
+
+extractResource
+Collapse multiline code also inserts raw code without wrapping into `r {}`
+
 # RSAddins 1.1.3
 
 * Bugfix for loopdebugger when using mclapply
