@@ -1,7 +1,7 @@
 # RSAddins 1.1.4
 
-extractResource
-Collapse multiline code also inserts raw code without wrapping into `r {}`
+* extractResource
+* Collapse multiline code also inserts raw code without wrapping into `r {}`
 * Getting flplot and fltab from sections now renames files and file paths in reports.
 
 # RSAddins 1.1.3
