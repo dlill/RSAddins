@@ -1,3 +1,7 @@
+# RSAddins 1.1.5
+
+Assembled a set of "defensive" shortcuts which should not destroy (m)any default shortcuts
+
 # RSAddins 1.1.4
 
 * extractResource
