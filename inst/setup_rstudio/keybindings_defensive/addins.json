@@ -1,0 +1,16 @@
+{
+    "RSAddins::insert_debugonce"                    : "Ctrl+Shift+Alt+G",
+    "RSAddins::transform_subsection"                : "Ctrl+J",
+    "RSAddins::initiate_or_delete_subsection"       : "Ctrl+Shift+J",
+    "RSAddins::insert_loopdebugger"                 : "Ctrl+Shift+I",
+    "RSAddins::insertDput"                          : "Ctrl+Shift+Alt+H",
+    "clipr::clipr_result"                           : "Ctrl+Shift+Alt+E",
+    "RSAddins::renumber_sections"                   : "Ctrl+Shift+K Ctrl+Shift+R",
+    "RSAddins::projectPathComment_allSections"      : "Ctrl+Shift+K Ctrl+Shift+P",
+    "RSAddins::flplotFromSectionHeader_allSections" : "Ctrl+Shift+K Ctrl+Shift+L",
+    "RSAddins::toggleCommentForWholeSection"        : "Ctrl+Shift+K Ctrl+Shift+C",
+    "RSAddins::deleteSection"                       : "Ctrl+Shift+K Ctrl+D",
+    "RSAddins::duplicateSection"                    : "Ctrl+Shift+K Ctrl+Shift+D",
+    "RSsnippets::insertPlainTextSnippet"            : "Ctrl+Shift+K Ctrl+Shift+Alt+S",
+    "RSsnippets::asSnippet"                         : "Ctrl+Shift+Alt+S"
+}
