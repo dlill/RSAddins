@@ -892,7 +892,6 @@ swapArg1Arg2 <- function() {
 #' @return
 #' @export
 #' @md
-#' @importFrom rstudioapi getSourceEditorContext documentSave insertText document_position setCursorPosition document_range setSelectionRanges executeCommand
 #' @importFrom stringr str_pad
 #'
 #' @examples
@@ -1792,7 +1791,6 @@ flplotFromSectionHeader_allSections <- function() {
 #' @export
 #' @md
 #' @family 
-#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
 #'
 #' @examples
 toggleCommentForWholeSection <- function() {
@@ -1831,7 +1829,6 @@ toggleCommentForWholeSection <- function() {
 #' @export
 #' @md
 #' @family 
-#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
 #'
 #' @examples
 duplicateSection <- function() {
@@ -1867,7 +1864,6 @@ duplicateSection <- function() {
 #' @export
 #' @md
 #' @family 
-#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
 #'
 #' @examples
 deleteSection <- function() {

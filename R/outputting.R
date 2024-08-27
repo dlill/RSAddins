@@ -15,7 +15,6 @@
 #' @importFrom data.table data.table copy as.data.table
 #' @importFrom tibble tribble
 #' @importFrom stringr str_pad
-#' importFrom rstudioapi getSourceEditorContext documentSave insertText
 #'
 #' @examples
 #' tableName <- "bla"
