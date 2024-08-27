@@ -23,6 +23,8 @@ library(magrittr)
 deparse2(1+1) \%>\% cat(sep = "\n")
 deparse2(1:10 + 0.1) \%>\% cat(sep = "\n")
 deparse2(setNames(1:26 + 0.1, letters)[1:10]) \%>\% cat(sep = "\n")
+x <- c(wup = "sadfm", "sdflk" = "asldkfjlas", a = "asssdf", sldkfjlabs = "df")
+deparse2(x) \%>\% cat(sep = "\n")
 deparse2(list(
   a= 1:3,
   b = list("a", "b", "c"),

@@ -261,9 +261,11 @@ extract_for <- function(textline) {
 
 #' @rdname extract_loopargs
 #' @export
+#' @examples
+#' textline <- "simR <- do.call(rbind,lapply(seq_along(Tested9001Models),function(i_m){"
 extract_apply <- function(textline) {
   loopval <- trimws(gsub(".*apply\\((.+), *(mc.cores.*)? *function.*", "\\1", textline))
-  loopvar <- gsub(".*apply\\(.+, * (mc.cores.*)? *function\\( *(\\w+) *\\).*", "\\2", textline)
+  loopvar <- gsub(".*apply\\(.+, *(mc.cores.*)? *function\\( *(\\w+) *\\).*", "\\2", textline)
   list(loopvar = loopvar, loopval = loopval)
 }
 
@@ -278,6 +280,8 @@ extract_apply <- function(textline) {
 #'
 #' @examples
 #' extract_loopargs("lapply(names(alpha), function(x) 1)")
+#' textline <- "simR <- do.call(rbind,lapply(seq_along(Tested9001Models),function(i_m){"
+#' extract_loopargs(textline)
 extract_loopargs <- function(textline) {
   if (grepl("apply\\(", textline)) return(extract_apply(textline))
   if (grepl("for ?\\(", textline)) return(extract_for(textline))
@@ -920,7 +924,7 @@ insertDput <- function() {
   x <- eval(parse(text = paste0("{", paste0(text, collapse = "\n"), "}")))
   
   codeToInsert <- deparse2(x)
-  codeToInsert <- paste0(codeToInsert, collapse = "\n")
+  codeToInsert <- paste0(c(codeToInsert, ""), collapse = "\n")
   
   rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
   # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
@@ -1067,6 +1071,8 @@ findRoxyIdxs <- function(rowStart, documentText) {
 #' deparse2(1+1) %>% cat(sep = "\n")
 #' deparse2(1:10 + 0.1) %>% cat(sep = "\n")
 #' deparse2(setNames(1:26 + 0.1, letters)[1:10]) %>% cat(sep = "\n")
+#' x <- c(wup = "sadfm", "sdflk" = "asldkfjlas", a = "asssdf", sldkfjlabs = "df")
+#' deparse2(x) %>% cat(sep = "\n")
 #' deparse2(list(
 #'   a= 1:3,
 #'   b = list("a", "b", "c"),

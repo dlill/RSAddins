@@ -4,7 +4,7 @@
 \alias{installRSkeybindings}
 \title{Install keybindings}
 \usage{
-installRSkeybindings(FLAGoverwrite = FALSE)
+installRSkeybindings(FLAGoverwrite = FALSE, FLAGdefensive = TRUE)
 }
 \description{
 Install keybindings

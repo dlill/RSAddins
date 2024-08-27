@@ -4,7 +4,7 @@
 \alias{printRSShortcuts}
 \title{Title}
 \usage{
-printRSShortcuts()
+printRSShortcuts(FLAGdefensive = TRUE)
 }
 \value{
 

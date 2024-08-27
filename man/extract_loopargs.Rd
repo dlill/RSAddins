@@ -22,7 +22,10 @@ list(loopvar = "loopingvariable", loopval = "list:ofValues")
 Get the arguments of a for loop or of lapply
 }
 \examples{
+textline <- "simR <- do.call(rbind,lapply(seq_along(Tested9001Models),function(i_m){"
 extract_loopargs("lapply(names(alpha), function(x) 1)")
+textline <- "simR <- do.call(rbind,lapply(seq_along(Tested9001Models),function(i_m){"
+extract_loopargs(textline)
 }
 \author{
 Daniel Lill (daniel.lill@intiquan.com)

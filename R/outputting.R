@@ -11,7 +11,11 @@
 #' @author Daniel Lill (daniel.lill@physik.uni-freiburg.de)
 #' @md
 #' @export
+#' @importFrom knitr kable
+#' @importFrom data.table data.table copy as.data.table
+#' @importFrom tibble tribble
 #' @importFrom stringr str_pad
+#' importFrom rstudioapi getSourceEditorContext documentSave insertText
 #'
 #' @examples
 #' tableName <- "bla"
@@ -86,7 +90,7 @@ outputMdTable <- function(dt, split_by = NULL, filename = NULL, format = c("mark
   }
   
   if (!is.null(split_by)){
-    dt <- copy(as.data.table(dt))
+    dt <- data.table::copy(data.table::as.data.table(dt))
     dn <- dt[,list(nlines = .N), by = split_by]
     dn[,`:=`(rowid = cumsum(nlines))]
     dn[,`:=`(rowid = rowid + 2 + 2*(!is.null(caption)))]

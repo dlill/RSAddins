@@ -4,7 +4,12 @@
 \alias{renameFilesInPlaceAndInReport}
 \title{Work horse to rename files and update the file paths in all reports}
 \usage{
-renameFilesInPlaceAndInReport(ds, text, plotOrTab = c("plot", "tab"))
+renameFilesInPlaceAndInReport(
+  ds,
+  text,
+  plotOrTab = c("plot", "tab"),
+  .outputFolder
+)
 }
 \arguments{
 \item{ds}{}
