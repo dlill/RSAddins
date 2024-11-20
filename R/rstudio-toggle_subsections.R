@@ -1081,7 +1081,7 @@ findRoxyIdxs <- function(rowStart, documentText) {
 #' deparse2(function(x) {bla}) %>% cat(sep = "\n")
 deparse2 <- function(x) {
   if (is.data.frame(x)) {
-    deparsedCode <- outputMdTable(x, NFLAGtribble = 1)
+    deparsedCode <- outputMdTable2(x)
   } else if (is.vector(x) && !is.list(x)) {
     # Deparse elementary vectors one by one and output one element per row
     deparsedValues <- lapply(x, deparse)
