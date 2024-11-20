@@ -1,3 +1,7 @@
+# RSAddins 1.1.6
+
+* Better deparser for data.frame -> tribble based on deparse2
+
 # RSAddins 1.1.5
 
 Assembled a set of "defensive" shortcuts which should not destroy (m)any default shortcuts

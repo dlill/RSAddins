@@ -1,7 +1,7 @@
 Package: RSAddins
 Type: Package
 Title: Rstudio addins
-Version: 1.1.5
+Version: 1.1.6
 Author: Daniel Lill
 Maintainer: Daniel Lill <daniel.lill@intiquan.com>
 Description: Collection of RStudio addins
