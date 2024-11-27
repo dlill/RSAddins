@@ -934,6 +934,57 @@ insertDput <- function() {
   rstudioapi::documentSave(id = e$id)
 }
 
+#' insertDput, but wrap unique around the variable
+#' 
+#' @return
+#' @export
+#' @md
+#' @importFrom stringr str_pad
+#'
+#' @examples
+#' # Uncomment and try out
+#' 1+1
+#' x <- 1:10 + 0.1
+#' x <- setNames(1:3 + 0.1,letters[1:3])
+#' a <- list(
+#'   a= 1:3,
+#'   b = list("a", "b", "c"),
+#'   d = list("a", "b", "c")
+#' )
+#' wup <- data.frame(a = 1+1, b ="c")
+#' function(x) {bla}
+#' 
+#' # Or, basic texts
+#' text <- "setNames(1:3 + 0.1,letters[1:3])"
+#' 
+insertDputUnique <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range
+  
+  row <- e$selection[[1]]$range$start[1]
+  rowEnd <- e$selection[[1]]$range$end[1]
+  documentText <- readLines(e$path)
+  
+  text <- e$selection[[1]]$text
+  if (text == "") text <- findConnectedCode(documentText, row)
+  
+  textPasted <- paste0(text, collapse = "\n")
+  variable <- ifelse(grepl("<-", textPasted),gsub("(.*)<-.*", "\\1", textPasted), "x")
+  x <- eval(parse(text = paste0("unique({", paste0(text, collapse = "\n"), "})")))
+  
+  codeToInsert <- deparse2(x)
+  codeToInsert <- paste0(c(codeToInsert, ""), collapse = "\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
+  rstudioapi::documentSave(id = e$id)
+}
+
 #' Find rows which, taken together, are parseable code
 #'
 #' @param documentText 

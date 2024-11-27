@@ -6,10 +6,6 @@
 \usage{
 toggleCommentForWholeSection()
 }
-\value{
-
-}
 \description{
 Comment/uncomment a whole section in one key stroke
 }
-\concept{}

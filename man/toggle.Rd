@@ -41,20 +41,4 @@ In the document outline, toggle a section on or off by adding or removing a #
 }
 \author{
 Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
-
-Daniel Lill (daniel.lill@intiquan.com)
 }

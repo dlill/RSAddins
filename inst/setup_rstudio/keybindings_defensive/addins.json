@@ -4,6 +4,7 @@
     "RSAddins::initiate_or_delete_subsection"       : "Ctrl+Shift+J",
     "RSAddins::insert_loopdebugger"                 : "Ctrl+Shift+I",
     "RSAddins::insertDput"                          : "Ctrl+Shift+Alt+H",
+    "RSAddins::insertDputUnique"                    : "Ctrl+Alt+H",
     "clipr::clipr_result"                           : "Ctrl+Shift+Alt+E",
     "RSAddins::renumber_sections"                   : "Ctrl+Shift+K Ctrl+Shift+R",
     "RSAddins::projectPathComment_allSections"      : "Ctrl+Shift+K Ctrl+Shift+P",

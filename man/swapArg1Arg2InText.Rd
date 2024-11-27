@@ -10,9 +10,6 @@ swapArg1Arg2InText(text)
 \arguments{
 \item{text}{}
 }
-\value{
-
-}
 \description{
 Swap the first two arguments of a function call
 e.g setdiff(x,y) becomes setdiff(y,x)

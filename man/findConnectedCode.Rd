@@ -13,9 +13,6 @@ findConnectedCode(documentText, row, FLAGreturnIdxs = FALSE)
 
 \item{FLAGreturnIdxs}{return indices instead of text}
 }
-\value{
-
-}
 \description{
 Find rows which, taken together, are parseable code
 }

@@ -6,9 +6,6 @@
 \usage{
 projectPathComment_allSections()
 }
-\value{
-
-}
 \description{
 Transform 
 # -------------------------------------------------------------------------#

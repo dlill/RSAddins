@@ -6,9 +6,6 @@
 \usage{
 printRSShortcuts(FLAGdefensive = TRUE)
 }
-\value{
-
-}
 \description{
 Title
 }

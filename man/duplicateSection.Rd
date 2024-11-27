@@ -6,10 +6,6 @@
 \usage{
 duplicateSection()
 }
-\value{
-
-}
 \description{
 Duplicate a whole section in one key stroke
 }
-\concept{}

@@ -9,9 +9,6 @@ getFormalValues(functionText)
 \arguments{
 \item{functionText}{}
 }
-\value{
-
-}
 \description{
 Title
 }

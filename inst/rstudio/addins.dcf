@@ -115,6 +115,11 @@ Description: inserts the current row or selected text as evaluated and dputted c
 Binding: insertDput
 Interactive: false
 
+Name: insertDputUnique
+Description: inserts the current row or selected text as evaluated and dputted code
+Binding: insertDputUnique
+Interactive: false
+
 Name: toggle_roxyComments
 Description: switches between # and #' style comments
 Binding: toggle_roxyComments

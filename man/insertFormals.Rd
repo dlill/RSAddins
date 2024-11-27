@@ -6,9 +6,6 @@
 \usage{
 insertFormals()
 }
-\value{
-
-}
 \description{
 Title
 }

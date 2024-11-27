@@ -11,9 +11,6 @@ findFunctionStartRow(documentText, row)
 
 \item{row}{}
 }
-\value{
-
-}
 \description{
 Title
 }

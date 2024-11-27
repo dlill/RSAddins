@@ -6,10 +6,6 @@
 \usage{
 deleteSection()
 }
-\value{
-
-}
 \description{
 Delete a whole section in one key stroke
 }
-\concept{}

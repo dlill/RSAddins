@@ -6,9 +6,6 @@
 \usage{
 turnIntoFactor()
 }
-\value{
-
-}
 \description{
 Title
 }

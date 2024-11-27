@@ -1,6 +1,8 @@
 # RSAddins 1.1.6
 
 * Better deparser for data.frame -> tribble based on deparse2
+* Added insertDputUnique which inserts unique values only.
+* Removed keybinding for insertHistory -> is now used by insertDputUnique
 
 # RSAddins 1.1.5
 

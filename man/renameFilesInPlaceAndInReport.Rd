@@ -16,9 +16,6 @@ renameFilesInPlaceAndInReport(
 
 \item{plotOrTab}{}
 }
-\value{
-
-}
 \description{
 Work horse to rename files and update the file paths in all reports
 }

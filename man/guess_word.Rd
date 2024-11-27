@@ -13,9 +13,6 @@ guess_word(textline, start, end)
 
 \item{end}{}
 }
-\value{
-
-}
 \description{
 Title
 }

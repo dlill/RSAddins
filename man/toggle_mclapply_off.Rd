@@ -9,9 +9,6 @@ toggle_mclapply_off(textline)
 \arguments{
 \item{textline}{}
 }
-\value{
-
-}
 \description{
 Title
 }

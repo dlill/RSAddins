@@ -6,9 +6,6 @@
 \usage{
 refactor_functionCall()
 }
-\value{
-
-}
 \description{
 
 }

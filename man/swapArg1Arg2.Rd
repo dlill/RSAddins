@@ -6,9 +6,6 @@
 \usage{
 swapArg1Arg2()
 }
-\value{
-
-}
 \description{
 e.g setdiff(x,y) becomes setdiff(y,x)
 }

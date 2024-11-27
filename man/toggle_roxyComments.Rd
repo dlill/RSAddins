@@ -6,9 +6,6 @@
 \usage{
 toggle_roxyComments()
 }
-\value{
-
-}
 \description{
 Switch between # and #' comments
 }

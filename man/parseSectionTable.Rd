@@ -9,9 +9,6 @@ parseSectionTable(text)
 \arguments{
 \item{text}{}
 }
-\value{
-
-}
 \description{
 Title
 }

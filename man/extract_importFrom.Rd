@@ -6,9 +6,6 @@
 \usage{
 extract_importFrom()
 }
-\value{
-
-}
 \description{
 Go through code and extract all package::function calls into roxy tags
 }

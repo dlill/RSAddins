@@ -6,9 +6,6 @@
 \usage{
 extractResource()
 }
-\value{
-
-}
 \description{
 Title
 }

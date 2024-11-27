@@ -11,9 +11,6 @@ findFunctionCode(documentText, row)
 
 \item{row}{}
 }
-\value{
-
-}
 \description{
 Find rows which, taken together, are a function
 }

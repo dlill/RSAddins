@@ -6,9 +6,6 @@
 \usage{
 insertHistory()
 }
-\value{
-
-}
 \description{
 Insert parts of the history
 }

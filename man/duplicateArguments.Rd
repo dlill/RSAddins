@@ -6,9 +6,6 @@
 \usage{
 duplicateArguments()
 }
-\value{
-
-}
 \description{
 Turn fun(a, b) into fun(a = a, b = b)
 }

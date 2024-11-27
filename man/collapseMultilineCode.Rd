@@ -6,9 +6,6 @@
 \usage{
 collapseMultilineCode()
 }
-\value{
-
-}
 \description{
 Title
 }
