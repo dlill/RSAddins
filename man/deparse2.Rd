@@ -4,7 +4,7 @@
 \alias{deparse2}
 \title{Featureful deparse:}
 \usage{
-deparse2(x)
+deparse2(x, FLAGpad = TRUE)
 }
 \arguments{
 \item{x}{an object to deparse}

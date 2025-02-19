@@ -5,6 +5,8 @@
     "RSAddins::insert_loopdebugger"                 : "Ctrl+Shift+I",
     "RSAddins::insertDput"                          : "Ctrl+Shift+Alt+H",
     "RSAddins::insertDputUnique"                    : "Ctrl+Alt+H",
+    "RSAddins::insertDputNopad"                     : "Ctrl+Shift+H",
+    "RSAddins::insertDputUniqueNopad"               : "Ctrl+H",
     "clipr::clipr_result"                           : "Ctrl+Shift+Alt+E",
     "RSAddins::renumber_sections"                   : "Ctrl+Shift+K Ctrl+Shift+R",
     "RSAddins::projectPathComment_allSections"      : "Ctrl+Shift+K Ctrl+Shift+P",
@@ -12,6 +14,7 @@
     "RSAddins::toggleCommentForWholeSection"        : "Ctrl+Shift+K Ctrl+Shift+C",
     "RSAddins::deleteSection"                       : "Ctrl+Shift+K Ctrl+D",
     "RSAddins::duplicateSection"                    : "Ctrl+Shift+K Ctrl+Shift+D",
+    "RSAddins::copySection"                         : "Ctrl+Shift+K Ctrl+C",
     "RSsnippets::insertPlainTextSnippet"            : "Ctrl+Shift+K Ctrl+Shift+Alt+S",
     "RSsnippets::asSnippet"                         : "Ctrl+Shift+Alt+S"
 }

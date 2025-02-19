@@ -12,6 +12,8 @@ Imports:
   knitr,
   tibble,
   data.table,
-  stringr
+  stringr,
+  rstudioapi,
+  clipr
 RoxygenNote: 7.2.3
 Suggests: testthat

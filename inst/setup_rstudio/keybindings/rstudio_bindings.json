@@ -12,6 +12,7 @@
     "showShellDialog" : "Ctrl+Shift+A",
     "sourceActiveDocument" : "",
     "showDiagnosticsProject" : "",
-    "splitline" : ""
+    "splitline" : "",
+    "setWorkingDir": ""
 }
 

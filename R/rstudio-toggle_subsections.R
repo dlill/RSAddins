@@ -985,6 +985,108 @@ insertDputUnique <- function() {
   rstudioapi::documentSave(id = e$id)
 }
 
+
+#' Execute selected text and insert its result as source code into your script
+#' 
+#' data.frames are inserted as tibble::tribble
+#' 
+#' @return
+#' @export
+#' @md
+#' @importFrom stringr str_pad
+#'
+#' @examples
+#' # Uncomment and try out
+#' 1+1
+#' x <- 1:10 + 0.1
+#' x <- setNames(1:3 + 0.1,letters[1:3])
+#' a <- list(
+#'   a= 1:3,
+#'   b = list("a", "b", "c"),
+#'   d = list("a", "b", "c")
+#' )
+#' wup <- data.frame(a = 1+1, b ="c")
+#' function(x) {bla}
+insertDputNopad <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range
+  
+  row <- e$selection[[1]]$range$start[1]
+  rowEnd <- e$selection[[1]]$range$end[1]
+  documentText <- readLines(e$path)
+  
+  text <- e$selection[[1]]$text
+  if (text == "") text <- findConnectedCode(documentText, row)
+  
+  textPasted <- paste0(text, collapse = "\n")
+  variable <- ifelse(grepl("<-", textPasted),gsub("(.*)<-.*", "\\1", textPasted), "x")
+  x <- eval(parse(text = paste0("{", paste0(text, collapse = "\n"), "}")))
+  
+  codeToInsert <- deparse2(x, FLAGpad = FALSE)
+  codeToInsert <- paste0(c(codeToInsert, ""), collapse = "\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
+  rstudioapi::documentSave(id = e$id)
+}
+
+#' insertDput, but wrap unique around the variable
+#' 
+#' @return
+#' @export
+#' @md
+#' @importFrom stringr str_pad
+#'
+#' @examples
+#' # Uncomment and try out
+#' 1+1
+#' x <- 1:10 + 0.1
+#' x <- setNames(1:3 + 0.1,letters[1:3])
+#' a <- list(
+#'   a= 1:3,
+#'   b = list("a", "b", "c"),
+#'   d = list("a", "b", "c")
+#' )
+#' wup <- data.frame(a = 1+1, b ="c")
+#' function(x) {bla}
+#' 
+#' # Or, basic texts
+#' text <- "setNames(1:3 + 0.1,letters[1:3])"
+#' 
+insertDputUniqueNopad <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range
+  
+  row <- e$selection[[1]]$range$start[1]
+  rowEnd <- e$selection[[1]]$range$end[1]
+  documentText <- readLines(e$path)
+  
+  text <- e$selection[[1]]$text
+  if (text == "") text <- findConnectedCode(documentText, row)
+  
+  textPasted <- paste0(text, collapse = "\n")
+  variable <- ifelse(grepl("<-", textPasted),gsub("(.*)<-.*", "\\1", textPasted), "x")
+  x <- eval(parse(text = paste0("unique({", paste0(text, collapse = "\n"), "})")))
+  
+  codeToInsert <- deparse2(x, FLAGpad = FALSE)
+  codeToInsert <- paste0(c(codeToInsert, ""), collapse = "\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(rowEnd + 1, 1), text = codeToInsert, e$id)
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool to reindent automatically
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
+  rstudioapi::documentSave(id = e$id)
+}
+
+
 #' Find rows which, taken together, are parseable code
 #'
 #' @param documentText 
@@ -1130,23 +1232,23 @@ findRoxyIdxs <- function(rowStart, documentText) {
 #' )) %>% cat(sep = "\n")
 #' deparse2(data.frame(a = 1+1, b = c("c", "sdafksdfl"))) %>% cat(sep = "\n")
 #' deparse2(function(x) {bla}) %>% cat(sep = "\n")
-deparse2 <- function(x) {
+deparse2 <- function(x, FLAGpad = TRUE) {
   if (is.data.frame(x)) {
     deparsedCode <- outputMdTable2(x)
   } else if (is.vector(x) && !is.list(x)) {
     # Deparse elementary vectors one by one and output one element per row
     deparsedValues <- lapply(x, deparse)
     deparsedValues <- do.call(c, deparsedValues)
-    deparsedValues <- stringr::str_pad(deparsedValues, max(nchar(deparsedValues)), side = "right")
+    if (FLAGpad) deparsedValues <- stringr::str_pad(deparsedValues, max(nchar(deparsedValues)), side = "right")
     if (!is.null(names(x))) {
       deparsedNames <- lapply(names(x), deparse)
       deparsedNames <- do.call(c, deparsedNames)
-      deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
+      if (FLAGpad) deparsedNames <- stringr::str_pad(deparsedNames, max(nchar(deparsedNames)), side = "right")
       deparsedValues <- paste0(deparsedNames, " = ", deparsedValues)
     }
     # Commas in beteween
     if (length(deparsedValues) > 1) {
-      deparsedValues[-length(deparsedValues)] <- paste0(deparsedValues[-length(deparsedValues)], " ,")
+      deparsedValues[-length(deparsedValues)] <- paste0(deparsedValues[-length(deparsedValues)], ifelse(FLAGpad, " , ", ", "))
     }
     deparsedValues <- paste0("  ", deparsedValues)
     deparsedCode <- c("c(", deparsedValues, ")")
@@ -1456,6 +1558,51 @@ guess_word <- function(textline, start, end) {
   word <- paste0(textlineSpacesSplit[wordIds == wordId], collapse = "")
   word
   
+}
+
+
+# -------------------------------------------------------------------------#
+# 12 Turn into filter ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @return
+#' @export
+#'
+#' @examples
+#' 
+# iris$Species
+# textline <- "iris$Species"
+turnIntoFilter <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  # current_range <- e$selection[[1]]$range # for reindent, but too annoying. if a solution is found, this can be reactivated.
+  current_row <- e$selection[[1]]$range$start[1]
+  text <- readLines(e$path)
+  textline <- text[current_row]
+  
+  start <- e$selection[[1]]$range$start[2]
+  end <- e$selection[[1]]$range$end[2]
+  
+  dataName <- gsub("\\$.*","", textline)
+  colName <- gsub(".*\\$","", textline)
+  evaled <- unique(eval(parse(text = textline)))
+  if (is.factor(evaled)) evaled <- as.character(evaled)
+  deparsed <- deparse2(evaled, FLAGpad = FALSE)
+  
+  newText <- paste0(dataName, " <- ", dataName, "[", colName, " %in% ", paste0(deparsed, collapse = "\n"), "]\n\n")
+  
+  rstudioapi::insertText(location = rstudioapi::document_position(current_row+1, 1),
+                         text = newText,
+                         id = e$id)
+  # Too annoying with the loss of focus, but if I find a solution one day it would be cool
+  # ranges <- rstudioapi::document_range(c(1, 0), c(Inf, Inf))
+  # rstudioapi::setSelectionRanges(ranges, id = e$id)
+  # rstudioapi::executeCommand("reindent")
+  # rstudioapi::setSelectionRanges(current_range, id = e$id)
+  rstudioapi::documentSave(id = e$id)
+  sink <- NULL
 }
 
 
@@ -1793,10 +1940,15 @@ flplotFromSectionHeader_allSections <- function() {
   ds[,`:=`(fl = gsub("_-_", "-", fl))] # many redundant spaces
   ds[,`:=`(fl = gsub("__", "_", fl))]  # many redundant spaces
   # Assemble filename  
-  ds[,`:=`(fl = sprintf(paste0("%0", max(s1) %/% 10, "d",
-                               "%0", max(s2) %/% 10, "d",
-                               "%0", max(s3) %/% 10, "d",
-                               "_%s"),s1,s2,s3,fl))]
+  ds[,`:=`(fl = sprintf(ifelse(any(c(s1,s2,s3) > 10), 
+                               paste0("%0", max(c(2, max(s1) %/% 10)), "d_", # If we have any script with 10 (sub(sub))sections, let's go to the complicated filename
+                                      "%0", max(c(2, max(s2) %/% 10)), "d_", # with 00_01_02_section
+                                      "%0", max(c(2, max(s3) %/% 10)), "d_",
+                                      "%s"),
+                               paste0("%0", max(c(1, max(s1) %/% 10)), "d", # Else let's keep 123_section
+                                      "%0", max(c(1, max(s2) %/% 10)), "d",
+                                      "%0", max(c(1, max(s3) %/% 10)), "d_",
+                                      "%s")),s1,s2,s3,fl))]
   
   
   # Identify subsections with flplot and fltab
@@ -1872,6 +2024,7 @@ toggleCommentForWholeSection <- function() {
   
 }
 
+
 # .. 2 Duplicate section -----
 
 #' Duplicate a whole section in one key stroke
@@ -1945,6 +2098,41 @@ deleteSection <- function() {
   rstudioapi::modifyRange(location = range, text = "", id = e$id)
 }
 
+
+# .. 4 copy section -----
+
+#' Copy section into clipboard
+#'
+#' @return
+#' @export
+#' @md
+#' @family 
+#' @md
+#' @family 
+#' importFrom rstudioapi getSourceEditorContext documentSave
+#' importFrom clipr write_clip
+#'
+#' @examples
+copySection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  currentRow <- e$selection[[1]]$range$start[1]
+  
+  ds <- parseSectionTable(text)
+  idx <- min(which(currentRow - ds$line <= 0)) - 1
+  rowStart <- ds$line[idx]
+  rowEnd <- ds$line[idx + 1] - 1
+  
+  textRange <- text[seq(rowStart, rowEnd)]
+  textRange <- paste0(c(textRange,""), collapse = "\n")
+  
+  Sys.getenv("DISPLAY") # Try to "force" DISPLAY - maybe this line will solve "Error: Clipboard on X11 requires that the DISPLAY envvar be configured."
+  clipr::write_clip(content = textRange)
+  
+}
+
+
 # -------------------------------------------------------------------------#
 # Extract resource ----
 # -------------------------------------------------------------------------#
@@ -1987,6 +2175,85 @@ extractResource <- function() {
 }
 
 
+# -------------------------------------------------------------------------#
+# Cursor position ----
+# -------------------------------------------------------------------------#
+#' Title
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+moveUpSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  row <- e$selection[[1]]$range$start[1]
+  text <- readLines(e$path)
+  
+  sectionRows <- grep("---- *$", text)
+  nextRow <- sectionRows[max(which(sectionRows < row))]
+  
+  rstudioapi::setCursorPosition(rstudioapi::document_position(nextRow, 1), id = e$id)
+}
+
+
+
+
+#' Title
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+moveDownSection <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  
+  row <- e$selection[[1]]$range$start[1]
+  text <- readLines(e$path)
+  
+  sectionRows <- grep("---- *$", text)
+  nextRow <- sectionRows[min(which(sectionRows > row))]
+  
+  rstudioapi::setCursorPosition(rstudioapi::document_position(nextRow, 1), id = e$id)
+}
+
+
+# -------------------------------------------------------------------------#
+# Eval Unique ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+evalUnique <- function() {
+  a <- rstudioapi::getActiveDocumentContext()
+  
+  if (a$id == "#console") {
+    e <- rstudioapi::getConsoleEditorContext()
+    text <- e$contents
+  } else {
+    e <- rstudioapi::getSourceEditorContext()
+    rstudioapi::documentSave(id = e$id)
+    
+    row <- e$selection[[1]]$range$start[1]
+    rowEnd <- e$selection[[1]]$range$end[1]
+    documentText <- readLines(e$path)
+    
+    text <- e$selection[[1]]$text
+    if (text == "") text <- findConnectedCode(documentText, row)
+  }
+  
+  rstudioapi::sendToConsole(code = paste0("unique({", paste0(text, collapse = "\n"), "})"), execute = TRUE, focus = FALSE)
+  
+  
+}
+
+
 # 22 [ ] >>>> Continue here / Todolist <<<<<<<<<<< ----
 # 
 # [ ] Sequential shortcuts. ctrl+k ctrl+k
@@ -1996,7 +2263,7 @@ extractResource <- function() {
 # [ ] evinceLastPlot. Extract last pdf file name from history to flplot and call evince
 #     re-use lines from history() for this.
 # 
-# [x] toggle betwee Multiline, single line
+# [ ] toggle betwee Multiline, single line
 #   list(a,
 #        b, 
 #        c)
@@ -2006,9 +2273,6 @@ extractResource <- function() {
 #   list(a, b, c)
 #   list("a", "b", "c")
 # 
-# [-] Remove a magrittr pipeline
-#   a %>% fun
-#   fun(a)
 #
 # [ ] safer exposeAsArgument which writes to the correct function
 #

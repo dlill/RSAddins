@@ -3,6 +3,9 @@
 * Better deparser for data.frame -> tribble based on deparse2
 * Added insertDputUnique which inserts unique values only.
 * Removed keybinding for insertHistory -> is now used by insertDputUnique
+* copySection
+* Move cursor up/down one section
+* evalUnique
 
 # RSAddins 1.1.5
 

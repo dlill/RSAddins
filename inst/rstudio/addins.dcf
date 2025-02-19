@@ -109,7 +109,6 @@ Binding: insertHistory
 Interactive: false
 
 
-
 Name: insertDput
 Description: inserts the current row or selected text as evaluated and dputted code
 Binding: insertDput
@@ -119,6 +118,18 @@ Name: insertDputUnique
 Description: inserts the current row or selected text as evaluated and dputted code
 Binding: insertDputUnique
 Interactive: false
+
+Name: insertDputNopad
+Description: inserts the current row or selected text as evaluated and dputted code
+Binding: insertDputNopad
+Interactive: false
+
+Name: insertDputUniqueNopad
+Description: inserts the current row or selected text as evaluated and dputted code
+Binding: insertDputUniqueNopad
+Interactive: false
+
+
 
 Name: toggle_roxyComments
 Description: switches between # and #' style comments
@@ -141,6 +152,11 @@ Interactive: false
 Name: turnIntoFactor
 Description: Turn something into a factor
 Binding: turnIntoFactor
+Interactive: false
+
+Name: turnIntoFilter
+Description: Turn d$x into a filter statement
+Binding: turnIntoFilter
 Interactive: false
 
 
@@ -191,10 +207,33 @@ Description: Delete a whole section
 Binding: deleteSection
 Interactive: false
 
+Name: copySection
+Description: Copy a whole section to clipboard
+Binding: copySection
+Interactive: false
+
 
 Name: extractResource
 Description: Extract a current function into Resources
 Binding: extractResource
+Interactive: false
+
+
+
+Name: moveUpSection
+Description: Move cursor up
+Binding: moveUpSection
+Interactive: false
+
+Name: moveDownSection
+Description: Move cursor down
+Binding: moveDownSection
+Interactive: false
+
+
+Name: evalUnique
+Description: Eval unique()
+Binding: evalUnique
 Interactive: false
 
 
