@@ -13,6 +13,7 @@
     "sourceActiveDocument" : "",
     "showDiagnosticsProject" : "",
     "splitline" : "",
-    "setWorkingDir": ""
+    "setWorkingDir": "",
+    "unfoldAll": "Alt+9"
 }
 
