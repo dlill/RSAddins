@@ -513,9 +513,9 @@ insertFormals <- function() {
 #' @export
 #'
 #' @examples
-#' textline <- "fuck <- lapply(1:n, function(x) {"
+#' textline <- "bam <- lapply(1:n, function(x) {"
 #' toggle_mclapply_on(textline)
-#' textline <- "fuck <- lapply(motherfuck[1:3], function(x) bla::fn(x))"
+#' textline <- "bam <- lapply(wup[1:3], function(x) bla::fn(x))"
 #' toggle_mclapply_on(textline)
 #' 
 toggle_mclapply_on <- function(textline) {
@@ -536,7 +536,7 @@ toggle_mclapply_on <- function(textline) {
 #' @export
 #'
 #' @examples
-#' textline <- "fuck <- mclapply(X = 1:n, mc.cores = ncores, FUN = function(x) {"
+#' textline <- "bam <- mclapply(X = 1:n, mc.cores = ncores, FUN = function(x) {"
 #' toggle_mclapply_off(textline)
 toggle_mclapply_off <- function(textline) {
   newline <- textline
@@ -2251,6 +2251,51 @@ evalUnique <- function() {
   rstudioapi::sendToConsole(code = paste0("unique({", paste0(text, collapse = "\n"), "})"), execute = TRUE, focus = FALSE)
   
   
+}
+
+# -------------------------------------------------------------------------#
+# Cat progress ----
+# -------------------------------------------------------------------------#
+
+#' Title
+#'
+#' @returns
+#' @export
+#' @md
+#' @family 
+#' @importFrom rstudioapi getSourceEditorContext documentSave document_range document_position modifyRange
+#'
+#' @examples
+catProgress <- function() {
+  e <- rstudioapi::getSourceEditorContext()
+  rstudioapi::documentSave(id = e$id)
+  text <- readLines(e$path)
+  
+  idxSecHeaders <- grep("----$", text)
+  idxCatTexts <- idxSecHeaders + 1
+  idxCatTexts <- idxCatTexts[grep("^cat\\(", text[idxCatTexts])]
+  if (length(idxCatTexts)) {
+    idxCatTexts <- rev(idxCatTexts)
+    for (i in seq_along(idxCatTexts)){
+      x <- idxCatTexts[i]
+      range <- rstudioapi::document_range(
+        start = rstudioapi::document_position(x, 1),
+        end = rstudioapi::document_position(x + 1, 1)
+      )
+      rstudioapi::modifyRange(location = range, text = "", id = e$id)
+    }
+  } else {
+    textNew <- rev(paste0("cat(\"", text[idxSecHeaders], "\\n\")\n"))
+    idxSecHeaders <- rev(idxSecHeaders)
+    for(i in seq_along(textNew)) {
+      x <- idxSecHeaders[i]
+      range <- rstudioapi::document_range(
+        start = rstudioapi::document_position(x+1, 1),
+        end = rstudioapi::document_position(x+1, 1)
+      )
+      rstudioapi::modifyRange(location = range, text = textNew[i], id = e$id)
+    }
+  }
 }
 
 

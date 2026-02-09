@@ -1,3 +1,8 @@
+# RSAddins 1.1.7 
+
+* catProgress
+
+
 # RSAddins 1.1.6
 
 * Better deparser for data.frame -> tribble based on deparse2
